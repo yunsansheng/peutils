@@ -39,7 +39,7 @@ class DrawMaskCls:
         self.objects_data = objects_data
         self.result_path = result_path
         self.colorMapping = colorMapping
-        self.height, self.width = self.get_image_meta(image_path)
+
 
     def get_image_meta(self, image_path):
         img_data = cv2.imread(image_path)
