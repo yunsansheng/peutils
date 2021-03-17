@@ -118,16 +118,19 @@ class DrawMaskCls:
         if mask:
             mask_layer = self.gen_mask_layer()
             out_path = os.path.join(self.result_path,"mask")
+            os.makedirs(out_path)
             cv2.imencode('.png', mask_layer)[1].tofile(os.path.join(out_path, image_name_without_suffix+'.png'))
 
         if combine:
             combine_layer = self.combine_mask_and_origin()  # 使用默认配置
             out_path = os.path.join(self.result_path, "mask_on_origin")
+            os.makedirs(out_path)
             cv2.imencode('.png', combine_layer)[1].tofile(os.path.join(out_path, image_name_without_suffix + '.png'))
 
 
         if origin:
             out_path = os.path.join(self.result_path, "origin")
+            os.makedirs(out_path)
             shutil.copyfile(self.image_path, os.path.join(out_path, image_name))
 
 
