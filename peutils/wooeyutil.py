@@ -183,3 +183,4 @@ class WooeyBaseZipHandlerFileList():
 
         else:
             raise Exception(f"file name suffix not endswith {self.need_process_suffix} or not zipfile")
+

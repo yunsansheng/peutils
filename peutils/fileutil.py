@@ -58,7 +58,7 @@ def list_files_deep(path='.', suffix='', not_prefix=(('~', '.'))):
         suffix = tuple([x.lower() for x in suffix])
 
     for filpath in all_files:
-        if filpath.name.lower().endswith(suffix) and not filpath.name.startswith(not_prefix):
+        if filpath.name.lower().endswith(suffix) and not filpath.name.startswith(not_prefix) and filpath.is_file():
             files.append(filpath.resolve().as_posix())
 
     return files
@@ -124,61 +124,6 @@ class Hanlde_Move_File():
 '''
 
 
-# hwang2, 2020-07-05 17:17 Changed: add
-
-class Handle_Compare_File():
-    def __init__(self, path_left, suffix_left, path_right, suffix_right):
-        self.path_left = path_left.strip()
-        self.suffix_left = suffix_left.strip()
-        self.path_right = path_right.strip()
-        self.suffix_right = suffix_right.strip()
-
-    def main(self):
-        print(f'Compair {self.path_left} {self.suffix_left} with {self.path_right} {self.suffix_right}')
-
-        left_files = list_files_deep(self.path_left, suffix=self.suffix_left)
-        right_files = list_files_deep(self.path_right, suffix=self.suffix_right)
-
-        print(f'发现 {self.suffix_left}后缀文件数量 共计:{len(left_files)}')
-        print(f'发现 {self.suffix_right}后缀文件数量 共计:{len(right_files)}')
-
-        left_files_without_suffix = {os.path.relpath(x, self.path_left)[:-len(self.suffix_left)] for x in left_files}
-        right_files_without_suffix = {os.path.relpath(x, self.path_right)[:-len(self.suffix_right)] for x in
-                                      right_files}
-
-        if len(left_files_without_suffix ^ right_files_without_suffix) == 0:
-            print("文件数量一致")
-        else:
-
-            print(self.suffix_left, '不对齐文件，请确认：', left_files_without_suffix - right_files_without_suffix)
-            print(self.suffix_right, '不对齐文件，请确认：', right_files_without_suffix - left_files_without_suffix)
-
-
-# Handle_Compare_File("/Users/hwang2/Documents/00_project/xiaomi/merge_file/zuoye-json",".json",
-#                     "/Users/hwang2/Documents/00_project/xiaomi/merge_file/zuoye-jpg",".jpg").main()
-
-
-'''
-针对单个格式做数据检查
-'''
-
-
-class Handle_Check_File():
-    def __init__(self, origin_path, suffix, check_func):
-        self.origin_path = origin_path.strip()
-        self.check_func = check_func
-        self.suffix = suffix.strip()
-
-    def main(self):
-        print(f'Check {self.check_func.__name__.upper()} By suffix: {self.suffix} in PATH {self.origin_path}')
-        files = list_files_deep(self.origin_path, suffix=self.suffix)
-
-        for filename in files:
-            try:
-                self.check_func(filename)
-            except Exception as e:
-                print(f'filename {filename} Error')
-
 
 import csv
 
@@ -211,9 +156,8 @@ def getExcelData(excelPath,sheetname=None):
     header = [x.value for x in next(all_data)]
     data = [[x.value for x in row] for row in all_data]
     return data,header
-#
-# data,header = getExcelData("/Users/hwang2/Downloads/star 项目客户提供数据.xlsx")
-# print(data,header)
+
+
 def saveExcelData(savePath,data: list, header=None):
     from openpyxl import Workbook
     wb = Workbook()
