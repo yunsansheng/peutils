@@ -32,11 +32,9 @@ def list_current_file(path='.', type='all', suffix='', not_prefix=(('~', '.'))):
         return [x.resolve().as_posix() for x in p.iterdir()
                 if x.name.endswith(suffix) and not x.name.startswith(not_prefix)]
     elif type == "file":
-        return [x.resolve().as_posix() for x in p.iterdir() if x.is_file()
-                if x.name.endswith(suffix) and not x.name.startswith(not_prefix)]
+        return [x.resolve().as_posix() for x in p.iterdir() if x.is_file() and  x.name.endswith(suffix) and not x.name.startswith(not_prefix)]
     elif type == "folder":
-        return [x.resolve().as_posix() for x in p.iterdir() if x.is_dir()
-                if x.name.endswith(suffix) and not x.name.startswith(not_prefix)]
+        return [x.resolve().as_posix() for x in p.iterdir() if x.is_dir() and  x.name.endswith(suffix) and not x.name.startswith(not_prefix)]
     else:
         raise Exception(f"type: {type} not defined.")
 
@@ -57,8 +55,9 @@ def list_files_deep(path='.', suffix='', not_prefix=(('~', '.'))):
     elif isinstance(suffix,tuple) ==True:
         suffix = tuple([x.lower() for x in suffix])
 
+    # Henry Wang, 2021-05-25 14:18 Changed:增加os.path.isfile的判断
     for filpath in all_files:
-        if filpath.name.lower().endswith(suffix) and not filpath.name.startswith(not_prefix) and filpath.is_file():
+        if filpath.is_file() ==True and filpath.name.lower().endswith(suffix) and not filpath.name.startswith(not_prefix):
             files.append(filpath.resolve().as_posix())
 
     return files
