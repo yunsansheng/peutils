@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author : Thomas
 # @File : pcd_py3.py
-# @CreateTime : 2021/6/23 10:31 上午
-# @Project: 
-# @Description :
-
-# -*- coding: utf-8 -*-
-# @Author : Thomas
-# @File : pcd_py3.py
 # @CreateTime : 2021/6/4 11:51 上午
-# @Project:
+# @Project: 
 # @Description :
 
 """
@@ -289,16 +282,28 @@ def parse_binary_compressed_pc_data(f, dtype, metadata):
     buf = lzf.decompress(compressed_data, uncompressed_size)
     if len(buf) != uncompressed_size:
         raise IOError('Error decompressing data')
+
+    # modify by thomas for mulit height start
     # the data is stored field-by-field
-    pc_data = np.zeros(metadata['width'], dtype=dtype)
+    # pc_data = np.zeros(metadata['width'], dtype=dtype)
+    # ix = 0
+    # for dti in range(len(dtype)):
+    #     dt = dtype[dti]
+    #     bytes = dt.itemsize * metadata['width']
+    #     column = np.fromstring(buf[ix:(ix+bytes)], dt)
+    #     pc_data[dtype.names[dti]] = column
+    #     ix += bytes
+    # return pc_data
+    pc_data = np.zeros(metadata['width']*metadata['height'], dtype=dtype)
     ix = 0
     for dti in range(len(dtype)):
         dt = dtype[dti]
-        bytes = dt.itemsize * metadata['width']
+        bytes = dt.itemsize * metadata['width'] * metadata['height']
         column = np.fromstring(buf[ix:(ix+bytes)], dt)
         pc_data[dtype.names[dti]] = column
         ix += bytes
     return pc_data
+    # modify by thomas for mulit height end
 
 
 def point_cloud_from_fileobj(f):
@@ -704,7 +709,7 @@ class PointCloud(object):
         # pdb.set_trace()
         md = self.get_metadata()
         assert(_metadata_is_consistent(md))
-        assert(len(self.pc_data) == self.points)
+        assert(len(self.pc_data) == self.points), "{}, {}".format(len(self.pc_data), self.points)
         assert(self.width*self.height == self.points)
         assert(len(self.fields) == len(self.count))
         assert(len(self.fields) == len(self.type))
