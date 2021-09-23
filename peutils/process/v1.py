@@ -65,7 +65,8 @@ class ErrorMsgLog():
         else:
             base += f", Frame:{repr(e['frames'])}"
         if e.get("info") is not None:
-            base += f", Group:{e['info']['groupId']}"
+            if e["info"].get("groupId") is not None:
+                base += f", Group:{e['info']['groupId']}"
 
         return base
 
