@@ -69,7 +69,7 @@ class A9CommonDataParseV1():
     ###以下参数一般不要改
     headers = {"Content-Type": "application/json"}
     async_task_nums = 10
-    mode="a9_parse"
+    mode="parse"
 
 
 
