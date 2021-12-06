@@ -19,11 +19,13 @@ import re
 import struct
 import copy
 # import cStringIO as sio
-from io import StringIO as sio
+# from io import StringIO as sio
+from io import BytesIO
 import numpy as np
 import warnings
 import lzf
 import uuid
+
 
 
 HAS_SENSOR_MSGS = True
@@ -38,7 +40,7 @@ __all__ = ['PointCloud',
            # 'point_cloud_to_buffer',
            # 'point_cloud_to_fileobj',
            'point_cloud_from_path',
-           # 'point_cloud_from_buffer',
+           'point_cloud_from_buffer',
            'point_cloud_from_fileobj',
            # 'make_xyz_point_cloud',
            # 'make_xyz_rgb_point_cloud',
@@ -339,7 +341,7 @@ def point_cloud_from_path(fname):
 
 
 def point_cloud_from_buffer(buf):
-    fileobj = sio.StringIO(buf)
+    fileobj = BytesIO(buf)
     pc = point_cloud_from_fileobj(fileobj)
     fileobj.close()  # necessary?
     return pc
@@ -767,9 +769,9 @@ class PointCloud(object):
 #     def from_fileobj(fileobj):
 #         return point_cloud_from_fileobj(fileobj)
 #
-#     @staticmethod
-#     def from_buffer(buf):
-#         return point_cloud_from_buffer(buf)
+    @staticmethod
+    def from_buffer(buf):
+        return point_cloud_from_buffer(buf)
 #
 #     @staticmethod
 #     def from_array(arr):
