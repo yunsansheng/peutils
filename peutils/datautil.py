@@ -9,9 +9,9 @@ Change History:
 
 '''
 
-def unique(items, key=None):
+def unique(iterable, key=None):
     seen = set()
-    for item in items:
+    for item in iterable:
         val = item if key is None else key(item) #要看后面key的函数传的什么，也是转成元组比较
         if val not in seen:
             yield item
@@ -46,8 +46,13 @@ with open("/Users/hwang2/Documents/b.csv") as f:
 
 
 
-def gen_uuid_seq():
-    count = 0
+def gen_uuid_seq(start=0):
+    '''
+    start 等于-1 第一个值出现值是0
+    start 等于 0 第一个出现值是1
+    '''
+    # 0的话就代表 从1 开始
+    count = start
     uuid_dict=dict()
     def new_uuid(uuid):
         nonlocal count
