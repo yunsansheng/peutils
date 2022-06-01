@@ -64,13 +64,15 @@ from peutils.transform.v1.base import *
 import json
 
 
+
+
 class LidarBoxPre():
     ### 输入连续帧数量
     ### 镜头顺序，可根据新数据的manifest读取
 
-    def __init__(self,frame_length):
+    def __init__(self,frame_length,camera_list):
         self.frame_length = frame_length
-        self.camera_list = []  # 镜头顺序，可以从新的数据中取到。如果变换了之后可能会影响到数据的
+        self.camera_list = camera_list  # 镜头顺序，可以从新的数据中取到。如果变换了之后可能会影响到数据的
         self.frame_list = [{
                                 "frameId":i,
                                 "items":[],
@@ -98,6 +100,11 @@ class LidarBoxPre():
         }
         return json.dumps(out_dict,ensure_ascii=False)
 
+
+
+if __name__ =="__main__":
+    ldboxpre = LidarBoxPre(frame_length = 50,camera_list=['front_middle_camera', 'lf_wide_camera', 'lr_wide_camera', 'rear_middle_camera', 'rf_wide_camera', 'rr_wide_camera'])
+    print(ldboxpre.dumps_data())
 
     # self.frames = {}
 

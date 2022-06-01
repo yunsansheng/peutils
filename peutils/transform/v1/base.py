@@ -206,4 +206,3 @@ class CommonBaseMixIn():
     def get_raw_data(self,url):
         rs =  self.session.get(url).json()
         return rs
-
