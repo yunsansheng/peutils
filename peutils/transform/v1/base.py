@@ -138,8 +138,12 @@ class Lidar3dImageRect():
         self.category = category
         self.position = position
         self.dimension = dimension
+        self.bbox =self.get_bbox()
 
         self.img_attr = img_attr  # 属性
+
+    def get_bbox(self):
+        return ["min_x","min_y","w","h"]
 
     def __repr__(self):
         return f"{self.id} {self.category} {self.number} {self.imageNum}"

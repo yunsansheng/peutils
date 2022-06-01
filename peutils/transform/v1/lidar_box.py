@@ -204,19 +204,11 @@ class LidarBoxFrame():
 
 
 
-class LidarBoxDataConfig():
-    def __init__(self,yaw_only=True,has_pointCount=True,number_adpter_func=None,
-                 parse_id_col="id",):
-        self.yaw_only = yaw_only
-        self.has_pointCount = has_pointCount
-        self.number_adpter_func = number_adpter_func
-        self.parse_id_col = parse_id_col # id或number
-
 
 class LidarBoxParse(CommonBaseMixIn):
 
     ### 继承session属性 用来读取url
-    def __init__(self,url,config:LidarBoxDataConfig):
+    def __init__(self,url,config):
         self.url = url
         self.config = config
         self.raw_data = self.get_raw_data(url) # 获取JSON字典数据数据
@@ -257,6 +249,15 @@ class LidarBoxParse(CommonBaseMixIn):
         return frames_lst
 
 
+
+class LidarBoxDataConfig():
+    def __init__(self,yaw_only=True,has_pointCount=True,number_adpter_func=None,
+                 parse_id_col="id",):
+        self.yaw_only = yaw_only
+        self.has_pointCount = has_pointCount
+        self.number_adpter_func = number_adpter_func
+        self.parse_id_col = parse_id_col # id或number
+
 from pprint import pprint
 
 if __name__ =="__main__":
@@ -274,7 +275,8 @@ if __name__ =="__main__":
     # print(lidar.frames_lst[0].camera_list)
     # print(lidar.frames_lst[0].camera_meta)
     # pprint(lidar.frames_lst[0].images_dict)
-    # print(lidar.frames_lst[0].has_23d_idset)
+    # print(lidar.frames_lst[0].only_image_idset)
+    # print(lidar.frames_lst[0].get_img_obj_list(id="f661d8a6-ad24-4f95-b034-67983b17709f"))
     # print(lidar.frames_lst[0].get_img_obj_list(id="f661d8a6-ad24-4f95-b034-67983b17709f",keep_nan=True))
 
 
