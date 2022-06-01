@@ -15,6 +15,7 @@ from types import SimpleNamespace
 from collections import defaultdict
 
 
+
 class LidarBoxFrame():
     def __init__(self,frameId,frameUrl,isValid,frameUrlInternal,frameUrlExternal,
                  frame_attr,items,images,
@@ -122,6 +123,7 @@ class LidarBoxFrame():
         imageNum = item["imageNum"]
         id = item["id"]
         number = item["number"]
+        rect_type = item["type"]
         category = item["category"]
 
         position = dict_adapter(item["position"], out_adapter=self.config.number_adpter_func)
@@ -138,16 +140,21 @@ class LidarBoxFrame():
         1.图像是否超出边界外
 
         '''
-        img_obj = Lidar3dImageRect(
-            frameNum=frameNum,
-            imageNum=imageNum,
-            id=id,
-            number=number,
-            category=category,
-            position=position,
-            dimension=dimension,
-            img_attr=img_attr,
-        )
+        if rect_type =="RECT":
+            img_obj = Lidar3dImageRect(
+                frameNum=frameNum,
+                imageNum=imageNum,
+                id=id,
+                number=number,
+                type=rect_type,
+                category=category,
+                position=position,
+                dimension=dimension,
+                img_attr=img_attr,
+            )
+        else:
+            # 暂时不会遇到
+            img_obj =None
 
         if self.config.parse_id_col == "id":
             key = id
@@ -232,9 +239,6 @@ class LidarBoxParse(CommonBaseMixIn):
 
         self.frames_lst = self.parse_by_frame()
 
-    def get_raw_data(self,url):
-        rs =  self.session.get(url).json()
-        return rs
 
     def parse_by_frame(self):
         '''

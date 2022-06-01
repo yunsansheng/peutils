@@ -142,23 +142,40 @@ class Lidar3dObj():
     def __repr__(self):
         return f"{self.id} {self.category} {self.number}"
 
+    def to_dict(self):
+        _data_dict = {
+            "frameNum":self.frameNum,
+            "id":self.id,
+            "number":self.number,
+            "category":self.category,
+            "position":self.position,
+            "rotation":self.rotation,
+            "dimension":self.dimension,
+            "labels":json.dumps(self.lidar_attr,ensure_ascii=False),
+        }
+        return _data_dict
+
+
+
 
 
 
 class Lidar3dImageRect():
-    def __init__(self, frameNum,imageNum, id, number, category, position, dimension,
+    def __init__(self, frameNum,imageNum, id, number,type, category, position, dimension,
                  img_attr=None):
         self.frameNum = frameNum
         self.imageNum = imageNum
         self.id = id
         self.number = number
+        self.type = type
         self.category = category
         self.position = position
         self.dimension = dimension
 
+        self.img_attr = img_attr  # 属性
+
         self.bbox =self.get_bbox()
 
-        self.img_attr = img_attr  # 属性
 
     def get_bbox(self):
         # xmin ymin w h
@@ -167,10 +184,26 @@ class Lidar3dImageRect():
             self.dimension["x"],self.dimension["y"]
         ]
 
+    def to_dict(self):
+        _data_dict = {
+            "type":self.type,
+            "id":self.id,
+            "number":self.number,
+            "category":self.category,
+            "position":self.position,
+            "dimension":self.dimension,
+            "labels":json.dumps(self.img_attr,ensure_ascii=False),
+        }
+        return _data_dict
+
     def __repr__(self):
         return f"{self.id} {self.category} {self.number} {self.imageNum}"
 
 
 class CommonBaseMixIn():
     session = get_session(3)
+
+    def get_raw_data(self,url):
+        rs =  self.session.get(url).json()
+        return rs
 
