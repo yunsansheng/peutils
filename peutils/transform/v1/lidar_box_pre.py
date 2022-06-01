@@ -88,7 +88,7 @@ class LidarBoxPre():
             lidar_obj.to_dict()
         )
 
-    def add_image_obj(self,frameNum,camera,img_obj):
+    def add_img_obj(self,frameNum,camera,img_obj):
         cam_idx = self.camera_list.index(camera)
         self.frame_list[frameNum]["images"][cam_idx]["items"].append(
             img_obj.to_dict()
