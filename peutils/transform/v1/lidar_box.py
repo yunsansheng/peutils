@@ -25,6 +25,8 @@ class LidarBoxFrame():
         self.frameUrlInternal = frameUrlInternal
         self.frameUrlExternal = frameUrlExternal
 
+        self.log = ErrorMsgLogV1()
+
         self.config = config
 
         self.frame_attr = frame_attr
@@ -79,6 +81,7 @@ class LidarBoxFrame():
         else:
             pointCount = None
 
+
         '''
         检查逻辑
         1.如果yaw_only True,检查 rotation x 和 y都是0
@@ -103,6 +106,14 @@ class LidarBoxFrame():
             key = number
         else:
             raise Exception("parse_id_col解析模式只能是id或者number")
+
+        ####业务检查
+        if self.config.has_pointCount == True and lidar_obj.pointCount is None:
+            self.log.create_error(msg="点云数量不能为空",obj=lidar_obj)
+
+        if self.config.yaw_only ==True:
+            if lidar_obj.rotation["x"] !=0 or lidar_obj.rotation["y"] !=0:
+                self.log.create_error(msg="仅水平旋转x y应该为0",obj=lidar_obj)
 
         return key,lidar_obj
 
@@ -270,7 +281,11 @@ if __name__ =="__main__":
                              number_adpter_func=None, #lambda i: round(i,3), # 默认None
                              parse_id_col = "id"
                          ))
-    # pprint(lidar.frames_lst[0].lidar_dict)
+    pprint(lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].rotation)
+    print(lidar.frames_lst[0].log.error_list)
+    # p = lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].position
+    # print(dict_adapter(p,rename={"x":"k","y":"x"},out_adapter=None))
+    # {'x': 18.690793403437375, 'y': -56.18997617593776, 'z': -1.380000000000006}
 
     # print(lidar.frames_lst[0].camera_list)
     # print(lidar.frames_lst[0].camera_meta)

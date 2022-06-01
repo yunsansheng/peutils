@@ -12,6 +12,8 @@ Change History:
 import requests
 from requests.adapters import HTTPAdapter
 import inspect
+import json
+from peutils.textutil import gen_uuid
 
 def get_session(retry=3):
     session = requests.Session()
@@ -20,6 +22,7 @@ def get_session(retry=3):
 
     return session
 
+# print(inspect.isbuiltin(int))
 
 def dict_adapter(d:dict,out_adapter=None, rename:dict=None):
     d = {k: v for k, v in d.items()}
@@ -36,73 +39,87 @@ def dict_adapter(d:dict,out_adapter=None, rename:dict=None):
     if rename is not None:
         ## 重写一遍所有的，但是这边不能有原来存在过的键，否则会冲突
         if len(set(rename.values()) & set(d.keys())) > 0:
-            raise Exception("新的名称不能存在之前的名称中")
+            raise Exception(f"新的名称不能存在之前的名称中 {repr(set(rename.values()) & set(d.keys()))}")
         else:
             d = {rename.get(k, k): v for k, v in d.items()}
     return d
 
 
 
+### 不兼容老的Plss模版，只兼容新的模版.
+### 都存在的 id, msg, category(可选). number(可选). frameNum(可选，如果单帧就是0)
+class ErrorUnit():
+    def __init__(self,id,message,category=None,number=None,frameNum=None,block=True):
+        self.id = id
+        self.message = message
+        self.category = category
+        self.number = number
+        self.frameList = self.get_frameList(frameNum)
+        self.bock = block
+
+    def get_frameList(self,frameNum):
+        if frameNum is None:
+            return [0]
+        elif isinstance(frameNum,int):
+            return [frameNum]
+        elif isinstance(frameNum,list):
+            return list(frameNum)
+        else:
+            raise Exception(f"不正确的frameNum定义 {frameNum}")
+
+    def __repr__(self):
+        if self.frameList !=[0]:
+            err_str = f"帧:{self.frameList} ID:{self.id} Message:{self.message} "
+        else:
+            err_str = f"ID:{self.id} Message:{self.message} "
+
+        if self.category!="":
+            err_str += f"物体:{self.category} {self.number}"
+
+        return err_str
+
+'''
+平台错误的格式
+'''
+
+class ErrorMsgLogV1():
+
+    def __init__(self):
+        self.error_list = []
+
+    def create_error(self,msg,obj=None,frameNum=None,block=True):
+        if obj is None:
+            self.error_list.append(ErrorUnit(
+                id = "common-" + gen_uuid(),
+                message= msg,
+                category="",
+                number="",
+                frameNum=frameNum,
+                block=block
+            ))
+        else:
+            self.error_list.append(ErrorUnit(
+                id = obj.id,
+                message = msg,
+                category = obj.category,
+                number = obj.number,
+                frameNum=frameNum,
+                block=block
+            ))
 
 
-#
-# class SturctMixIn():
-#     def to_dict(self, out_adapter_dict=None, rename_dict=None):
-#         data = {k: v for k, v in self.__dict__.items()}  # 重新创建字典
-#
-#         #### 如果没有的话
-#         if out_adapter_dict is not None:
-#             for key, ad_func in out_adapter_dict.items():
-#                 data.update({key: ad_func(data[key])})
-#         ### 重命名
-#         if rename_dict is not None:
-#             data = {rename_dict.get(k, k): v for k, v in data.items()}
-#         return data
+    def fomart_error_str(self)->str:
+        return json.dumps([repr(e) for e in self.error_list],ensure_ascii=False)
+        # 如果frame是0，不打印。
 
-#
-# class Struct(SturctMixIn):
-#     def __init__(self,**entries):
-#         self.__dict__.update(entries)
-#
-#     def __repr__(self):
-#         return repr(self.__dict__)
-#
-#
-#
-# class XYZ(SturctMixIn):
-#     __slots__ = ["x", "y", "z"]
-#
-#     def __init__(self,d, adapter=None):
-#         if adapter is None:
-#             self.x = d["x"]
-#             self.y = d["y"]
-#             self.z = d["z"]
-#         else:
-#             self.x = adapter(d["x"])
-#             self.y = adapter(d["y"])
-#             self.z = adapter(d["z"])
-#
-#     def __repr__(self):
-#         return f"x:{self.x} ,y:{self.y} ,z:{self.z}"
-#
-#
-# class XYZW(SturctMixIn):
-#     __slots__ = ["x", "y", "z", "w"]
-#
-#     def __init__(self, d, adapter=None):
-#         if adapter is None:
-#             self.x = d["x"]
-#             self.y = d["y"]
-#             self.z = d["z"]
-#             self.w = d["w"]
-#         else:
-#             self.x = adapter(d["x"])
-#             self.y = adapter(d["y"])
-#             self.z = adapter(d["z"])
-#             self.w = adapter(d["w"])
-#
-#     def __repr__(self):
-#         return f"x:{self.x} ,y:{self.y} ,z:{self.z}, w:{self.w}"
+    def format_a9_error_str(self)->str:
+        # 平台只接受id,message,frames,block四个属性。
+        return json.dumps([{
+            "id": e.id,
+            "message": e.message,
+            "frames":e.frameList,
+            "block":e.block
+        } for e in self.error_list],ensure_ascii=False)
 
 
 
@@ -126,7 +143,7 @@ class Lidar3dObj():
         return f"{self.id} {self.category} {self.number}"
 
 
-### type
+
 
 class Lidar3dImageRect():
     def __init__(self, frameNum,imageNum, id, number, category, position, dimension,
@@ -138,12 +155,17 @@ class Lidar3dImageRect():
         self.category = category
         self.position = position
         self.dimension = dimension
+
         self.bbox =self.get_bbox()
 
         self.img_attr = img_attr  # 属性
 
     def get_bbox(self):
-        return ["min_x","min_y","w","h"]
+        # xmin ymin w h
+        return [
+            self.position["x"],self.position["y"],
+            self.dimension["x"],self.dimension["y"]
+        ]
 
     def __repr__(self):
         return f"{self.id} {self.category} {self.number} {self.imageNum}"
