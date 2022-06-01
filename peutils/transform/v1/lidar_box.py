@@ -117,7 +117,7 @@ class LidarBoxFrame():
 
         return key,lidar_obj
 
-    def parse_img_by_item(self,item):
+    def parse_img_by_item(self,item,width,height):
         frameNum = item["frameNum"]
         imageNum = item["imageNum"]
         id = item["id"]
@@ -156,6 +156,12 @@ class LidarBoxFrame():
         else:
             raise Exception("parse_id_col解析模式只能是id或者number")
 
+        if self.config.overflow ==False:
+            if img_obj.position["x"] <0 or img_obj.position["y"]<0 \
+                    or (img_obj.position["x"] + img_obj.dimension["x"]) > width \
+                    or (img_obj.position["y"] + img_obj.dimension["y"]) >height:
+                self.log.create_error(msg="图像超出边界",obj=img_obj)
+
         return key, img_obj
 
 
@@ -170,12 +176,12 @@ class LidarBoxFrame():
             raise Exception(f"{self.config.parse_id_col} 解析模式下数量不等，请检查使用参数")
         return lidar_dict
 
-    def get_single_image_dict(self,items):
+    def get_single_image_dict(self,items,width,height):
         single_image_dict = dict()
 
         for item in items:
             if item["type"] =="RECT":
-                key,img_obj = self.parse_img_by_item(item)
+                key,img_obj = self.parse_img_by_item(item,width,height)
                 single_image_dict[key] = img_obj
             else:
                 raise Exception("目前图像物体仅支持RECT,其他类型还在开发中")
@@ -201,7 +207,7 @@ class LidarBoxFrame():
                 "width": img["width"],
                 "height": img["height"],
             }
-            images_dict[camera_name] = self.get_single_image_dict(img["items"])
+            images_dict[camera_name] = self.get_single_image_dict(img["items"],width=img["width"],height = img["height"])
 
         ## check
         if len(camera_list) != len(images):
@@ -263,11 +269,12 @@ class LidarBoxParse(CommonBaseMixIn):
 
 class LidarBoxDataConfig():
     def __init__(self,yaw_only=True,has_pointCount=True,number_adpter_func=None,
-                 parse_id_col="id",):
+                 parse_id_col="id",overflow=False):
         self.yaw_only = yaw_only
         self.has_pointCount = has_pointCount
         self.number_adpter_func = number_adpter_func
         self.parse_id_col = parse_id_col # id或number
+        self.overflow = overflow # 默认不允许超出图像边界
 
 from pprint import pprint
 
@@ -279,7 +286,8 @@ if __name__ =="__main__":
                              yaw_only = True,
                              has_pointCount= True,
                              number_adpter_func=None, #lambda i: round(i,3), # 默认None
-                             parse_id_col = "id"
+                             parse_id_col = "id",
+                             overflow= False
                          ))
     pprint(lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].rotation)
     print(lidar.frames_lst[0].log.error_list)
