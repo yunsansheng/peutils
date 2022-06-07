@@ -13,6 +13,7 @@ from peutils.transform.v1.base import *
 import json
 from types import SimpleNamespace
 from collections import defaultdict
+from peutils.datautil import gen_uuid_seq
 
 
 
@@ -29,6 +30,8 @@ class LidarBoxFrame():
         self.log = ErrorMsgLogV1()
 
         self.config = config
+        if self.config.parse_id_col =="fid":
+            self.config.seq_func = gen_uuid_seq(start=self.config.seq_start)
 
         self.frame_attr = frame_attr
         self.lidar_dict = self.get_lidar_dict(items)
@@ -105,6 +108,8 @@ class LidarBoxFrame():
             key = id
         elif self.config.parse_id_col =="number":
             key = number
+        elif self.config.parse_id_col in ("gid","fid"):
+            key = self.config.seq_func(id)
         else:
             raise Exception("parse_id_col解析模式只能是id或者number")
 
@@ -160,6 +165,8 @@ class LidarBoxFrame():
             key = id
         elif self.config.parse_id_col == "number":
             key = number
+        elif self.config.parse_id_col in ("gid","fid"):
+            key = self.config.seq_func(id)
         else:
             raise Exception("parse_id_col解析模式只能是id或者number")
 
@@ -235,8 +242,10 @@ class LidarBoxParse(CommonBaseMixIn):
     def __init__(self,url,config):
         self.url = url
         self.config = config
-        self.raw_data = self.get_raw_data(url) # 获取JSON字典数据数据
+        if self.config.parse_id_col == "gid":
+            self.config.seq_func = gen_uuid_seq(start=self.config.seq_start)
 
+        self.raw_data = self.get_raw_data(url) # 获取JSON字典数据数据
         self.frames_lst = self.parse_by_frame()
 
 
@@ -280,11 +289,12 @@ class LidarBoxParse(CommonBaseMixIn):
 
 class LidarBoxDataConfig():
     def __init__(self,yaw_only=True,has_pointCount=True,number_adpter_func=None,
-                 parse_id_col="id",overflow=False):
+                 parse_id_col="id",seq_start=0,overflow=False):
         self.yaw_only = yaw_only
         self.has_pointCount = has_pointCount
         self.number_adpter_func = number_adpter_func
-        self.parse_id_col = parse_id_col # id或number
+        self.parse_id_col = parse_id_col # id或number ,g_id, frame_id
+        self.seq_start = seq_start
         self.overflow = overflow # 默认不允许超出图像边界
 
 from pprint import pprint
@@ -292,15 +302,16 @@ from pprint import pprint
 if __name__ =="__main__":
     ## 单帧
     from pprint import pprint
-    lidar = LidarBoxParse(url="http://oss.prd.appen.com.cn:9000/appen-lidar-prod/15a7d17dd9ff2d831e0523421b1798e3/R.1647329777003.7628df30-4735-40fe-a641-b8210e11e00e.CLnhugEQJA3d3d_2022-03-15T073140Z.16644.QA_RW.f5079a20-5bef-478f-b9c5-a19f84227acd.27d74dc726f51f05e31f2206fda11714.review.json",
+    lidar = LidarBoxParse(url="http://oss.prd.appen.com.cn:9000/appen-lidar-prod/e0d86b7d12cb6c681b4db56d3d6d3493/R.1653547658488.2c042042-113f-4e3e-9943-d132840c66c9.628dac8f4597643487fa6761_2022-05-26T034750Z.16845.REWORK.3ca20e08-b852-4c63-846c-7dfaaaa958b8.f4ff151ec65786cb92b00aef77f0a14b.review.json",
                          config =LidarBoxDataConfig(
                              yaw_only = True,
                              has_pointCount= True,
                              number_adpter_func=None, #lambda i: round(i,3), # 默认None
-                             parse_id_col = "id",
+                             parse_id_col = "gid",
+                             seq_start = 0, # 如果是 gid,fid,或者frame_id 需要提供seq_start， 如果是0就是从1开始编号，如果是-1就是从0开始编号
                              overflow= False
                          ))
-    print(lidar)
+    pprint(lidar.frames_lst[49].lidar_dict)
     # pprint(lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].rotation)
     # print(lidar.frames_lst[0].log.error_list)
     # p = lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].position

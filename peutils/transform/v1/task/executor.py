@@ -51,7 +51,7 @@ class AbstractTask(ABC):
             raise Exception("请定义log 并且使用ErrorMsgLog的实例")
         else:
             ### 将自带错误的解析方法放过去这个错误的方法
-            self.log.error_list.extend(self.parse_obj.check_frames_error)
+            self.log.error_list.extend(self.parse_obj.check_frames_error())
 
             if check_mode=="a9_check":
                 self.check_row_on_a9()
@@ -81,20 +81,20 @@ class AbstractTask(ABC):
 ### OSS数据保存的功能
 
 class CommonTaskV1():
-    def __init__(self,row_cls:type,max_worker=16):
+    def __init__(self,row_cls:type,parse_cls:type,config,max_worker=16):
         self.RowTask = row_cls
+        self.parse_cls = parse_cls
+        self.config = config
         self.max_worker = max_worker
         self.format_progress = lambda: None
 
 
     def process_unit(self,row,users_param):
-        row_task = self.RowTask(row=row,users_param=users_param)
+        row_task = self.RowTask(parse_cls=self.parse_cls,config=self.config,row=row,users_param=users_param)
         ## 执行检查逻辑,将错误输出到log
-        row_task.check_row_func()
 
         ###执行方法,捕捉未知错误
         try:
-            row_task = self.RowTask(row=row, users_param=users_param)
             row_task.check_row_func()
             row_task.parse_row_func()
         except Exception as e:
