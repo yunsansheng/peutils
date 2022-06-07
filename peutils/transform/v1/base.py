@@ -206,3 +206,42 @@ class CommonBaseMixIn():
     def get_raw_data(self,url):
         rs =  self.session.get(url).json()
         return rs
+
+
+import math
+def gen_format_progress_seq(total,split_part=10):
+    ###初始化
+    total = total # 总的数量
+    split_part = split_part # 分片数量
+    every_part_num = math.ceil(total/split_part) # 总打印的分片数量
+
+    finish = 0  # 当前完成的数量
+    finish_part = 0 # 分配开始的进度数量
+    # 分片数量，假如 总量是102，分片是10
+    def update(step=1):
+        nonlocal finish,finish_part
+        finish += step # 每调用一次 加1
+        if finish//every_part_num >finish_part and finish//every_part_num <=split_part:
+            finish_part+=1 # 分片数量加 1
+            print( "[",("*"*finish_part).ljust(split_part,"_") ,"]" )
+        # 根据完成数量update进度
+    return update
+
+import time
+def deco_execution_time(func):
+    def wrapper(*args, **kw):
+        t_begin = time.time()
+        res = func(*args, **kw)
+        t_end = time.time()
+
+        if t_end - t_begin < 60:
+            print('%s executed in %s (s)' % (func.__name__, round(t_end - t_begin,2)) )
+        elif t_end -t_begin <3600:
+            print('%s executed in %s (min)' % (func.__name__, round((t_end - t_begin)/60, 2)))
+        else:
+            print('%s executed in %s (h)' % (func.__name__, round((t_end - t_begin) /3600, 2)))
+
+        return res
+
+    return wrapper
+

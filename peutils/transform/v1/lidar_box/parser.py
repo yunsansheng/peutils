@@ -240,6 +240,13 @@ class LidarBoxParse(CommonBaseMixIn):
         self.frames_lst = self.parse_by_frame()
 
 
+    def check_frames_error(self):
+        all_errors = []
+        for frame in self.frames_lst:
+            all_errors.extend(frame.log.error_list)
+        return all_errors
+
+
     def parse_by_frame(self):
         '''
         返回解析后的frame列表，对应的数据
@@ -293,8 +300,9 @@ if __name__ =="__main__":
                              parse_id_col = "id",
                              overflow= False
                          ))
-    pprint(lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].rotation)
-    print(lidar.frames_lst[0].log.error_list)
+    print(lidar)
+    # pprint(lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].rotation)
+    # print(lidar.frames_lst[0].log.error_list)
     # p = lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].position
     # print(dict_adapter(p,rename={"x":"k","y":"x"},out_adapter=None))
     # {'x': 18.690793403437375, 'y': -56.18997617593776, 'z': -1.380000000000006}
