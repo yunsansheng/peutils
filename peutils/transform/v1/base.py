@@ -164,7 +164,7 @@ class Lidar3dImageRect():
     def __init__(self, frameNum,imageNum, id, number,type, category, position, dimension,
                  img_attr=None):
         self.frameNum = frameNum
-        self.imageNum = imageNum
+        self.imageNum = imageNum # 图像的次序。从0开始
         self.id = id
         self.number = number
         self.type = type
@@ -245,3 +245,9 @@ def deco_execution_time(func):
 
     return wrapper
 
+def remove_key_if_exists(info_dict: dict, rm_list: list):
+    for rm_name in rm_list:
+        if rm_name in info_dict:
+            del info_dict[rm_name]
+
+    return info_dict

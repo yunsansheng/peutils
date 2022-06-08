@@ -35,7 +35,7 @@ class LidarBoxFrame():
 
         self.frame_attr = frame_attr
         self.lidar_dict = self.get_lidar_dict(items)
-        self.camera_list,self.camera_meta,self.images_dict= self.get_images_dict(images)
+        self.camera_list,self.camera_meta,self.images_dict,self.images_list= self.get_images_dict(images)
         self._img_idset = self.get_img_idset(self.images_dict)
         self.only_lidar_idset= self.lidar_dict.keys() - self._img_idset # 只有3D 没有出现在2D的ID
         self.only_image_idset = self._img_idset -  self.lidar_dict.keys() # 只出现在2D没有出现在3D中的ID
@@ -207,9 +207,11 @@ class LidarBoxFrame():
 
     def get_images_dict(self,images):
         ### 先解析出镜头数量
-        images_dict = dict()
+        images_dict = dict() #{cam:dict1,cam2:dict2,...}
+        images_list = [] #[dict1,dict2,..]
         camera_list = []
         camera_meta = dict()
+
         for img in images:
             image_path = img["image"]
             camera_name = image_path.split("/")[-2]
@@ -221,14 +223,17 @@ class LidarBoxFrame():
                 "imageUrlExternal":img["imageUrlExternal"],
                 "width": img["width"],
                 "height": img["height"],
+
             }
-            images_dict[camera_name] = self.get_single_image_dict(img["items"],width=img["width"],height = img["height"])
+            sg_img_dict = self.get_single_image_dict(img["items"],width=img["width"],height = img["height"])
+            images_dict[camera_name] = sg_img_dict
+            images_list.append(sg_img_dict)
 
         ## check
         if len(camera_list) != len(images):
             raise Exception("找到的镜头数量和原始不一致")
 
-        return camera_list,camera_meta,images_dict
+        return camera_list,camera_meta,images_dict,images_list
 
 
     def __repr__(self):
