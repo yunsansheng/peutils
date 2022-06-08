@@ -25,11 +25,11 @@ from peutils.textutil import gen_uuid
 ## 单条数据的处理基类，可能是连续帧
 class AbstractTask(ABC):
 
-    def __init__(self,parse_cls,config,row,users_param=None):
+    def __init__(self,row,users_param=None):
         self.row= row # 原始csv这一行的数据
         self.users_param = users_param if users_param is not None else {} # 前端用户的参数
         self.log = ErrorMsgLogV1()  # 这行的所有错误
-        self.parse_obj = parse_cls(row["annotation"],config=config)
+        # self.parse_obj = parse_cls(row["annotation"],config=config)
 
     @property
     def row_flag(self):
@@ -51,7 +51,7 @@ class AbstractTask(ABC):
             raise Exception("请定义log 并且使用ErrorMsgLog的实例")
         else:
             ### 将自带错误的解析方法放过去这个错误的方法
-            self.log.error_list.extend(self.parse_obj.check_frames_error())
+            # self.log.error_list.extend(self.parse_obj.check_frames_error())
 
             if check_mode=="a9_check":
                 self.check_row_on_a9()
@@ -81,16 +81,16 @@ class AbstractTask(ABC):
 ### OSS数据保存的功能
 
 class CommonTaskV1():
-    def __init__(self,row_cls:type,parse_cls:type,config,max_worker=16):
+    def __init__(self,row_cls:type,max_worker=16):
         self.RowTask = row_cls
-        self.parse_cls = parse_cls
-        self.config = config
+        # self.parse_cls = parse_cls
+        # self.config = config
         self.max_worker = max_worker
         self.format_progress = lambda: None
 
 
     def process_unit(self,row,users_param):
-        row_task = self.RowTask(parse_cls=self.parse_cls,config=self.config,row=row,users_param=users_param)
+        row_task = self.RowTask(row=row,users_param=users_param)
         ## 执行检查逻辑,将错误输出到log
 
         ###执行方法,捕捉未知错误
@@ -115,7 +115,7 @@ class CommonTaskV1():
         self.format_progress = gen_format_progress_seq(total=len(task_df), split_part=10)
         header = task_df.columns
 
-        df_error = pd.DataFrame(columns=[*header,"errors"])
+        df_error = pd.DataFrame(columns=["errors",*header])
         # task_df = pd.DataFrame(columns=["col1", "col2"],
         #                        data=[{"col1": 1, "col2": "a"}, {"col1": 2, "col2": "b"},
         #                              {"col1": 3, "col2": "c"}, {"col1": 4, "col2": "d"}])
@@ -128,7 +128,7 @@ class CommonTaskV1():
                 row_flag, row, errors, = future.result()  # flag 1代表是成功，0代表失败，失败后所有的数据，写入csv
                 self.format_progress()
                 if row_flag == 0:
-                    df_error = df_error.append({**row,"errors":errors},ignore_index=True)
+                    df_error = df_error.append({"errors":errors,**row,},ignore_index=True)
 
             if len(df_error)>0:
                 print(f"{file} 发现异常{len(df_error)}，请检查输出文件中的异常明细", file=sys.stderr)

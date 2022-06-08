@@ -121,6 +121,7 @@ class LidarBoxFrame():
             if lidar_obj.rotation["x"] !=0 or lidar_obj.rotation["y"] !=0:
                 self.log.create_error(msg="仅水平旋转x y应该为0",obj=lidar_obj)
 
+
         return key,lidar_obj
 
     def parse_img_by_item(self,item,width,height):
