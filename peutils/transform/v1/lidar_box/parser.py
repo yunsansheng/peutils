@@ -62,22 +62,12 @@ class LidarBoxFrame():
 
 
     def parse_lidar_by_item(self,item):
-        frameNum = item["frameNum"]
-        id = item["id"]
-        number= item["number"]
-        category = item["category"]
-        # print(self.config)
+
         rotation =  dict_adapter(item["rotation"],out_adapter=self.config.number_adpter_func)
         position = dict_adapter(item["position"],out_adapter=self.config.number_adpter_func)
         dimension = dict_adapter(item["dimension"],out_adapter=self.config.number_adpter_func)
         ## 四元数
         quaternion =dict_adapter(item["quaternion"],out_adapter=self.config.number_adpter_func)
-
-        ### 解析属性
-        if item.get("labels") is None:
-            lidar_attr = dict()
-        else:
-            lidar_attr = json.loads(item["labels"])
 
         ### 解析点云数量
         if item.get("pointCount") and item.get("pointCount").get("lidar"):
@@ -92,26 +82,26 @@ class LidarBoxFrame():
         2.如果has_pointCount是True,检查pointCount 不是None
         '''
         lidar_obj = Lidar3dObj(
-            frameNum= frameNum,
-            id = id,
-            number=number,
-            category=category,
+            frameNum= item["frameNum"],
+            id = item["id"],
+            number= item["number"],
+            category=item["category"],
             position= position,
             rotation= rotation,
             dimension = dimension,
             quaternion = quaternion,
-            lidar_attr = lidar_attr,
+            lidar_attr = json.loads(item["labels"]) if item.get("labels") else dict(),
             pointCount = pointCount
         )
 
         if self.config.parse_id_col =="id":
-            key = id
+            key = item["id"]
         elif self.config.parse_id_col =="number":
-            key = number
+            key = item["number"]
         elif self.config.parse_id_col in ("gid","fid"):
-            key = self.config.seq_func(id)
+            key = self.config.seq_func(item["id"])
         else:
-            raise Exception("parse_id_col解析模式只能是id或者number")
+            raise Exception("parse_id_col解析模式错误")
 
         ####业务检查
         if self.config.has_pointCount == True and lidar_obj.pointCount is None:
@@ -125,51 +115,39 @@ class LidarBoxFrame():
         return key,lidar_obj
 
     def parse_img_by_item(self,item,width,height):
-        frameNum = item["frameNum"]
-        imageNum = item["imageNum"]
-        id = item["id"]
-        number = item["number"]
-        rect_type = item["type"]
-        category = item["category"]
 
         position = dict_adapter(item["position"], out_adapter=self.config.number_adpter_func)
         dimension = dict_adapter(item["dimension"], out_adapter=self.config.number_adpter_func)
-
-        ### 解析属性
-        if item.get("labels") is None:
-            img_attr = dict()
-        else:
-            img_attr = json.loads(item["labels"])
 
         '''
         检查逻辑
         1.图像是否超出边界外
 
         '''
-        if rect_type =="RECT":
+        if item["type"] =="RECT":
             img_obj = Lidar3dImageRect(
-                frameNum=frameNum,
-                imageNum=imageNum,
-                id=id,
-                number=number,
-                type=rect_type,
-                category=category,
+                frameNum=item["frameNum"],
+                imageNum=item["imageNum"],
+                id=item["id"],
+                number=item["number"],
+                type=item["type"],
+                category=item["category"],
                 position=position,
                 dimension=dimension,
-                img_attr=img_attr,
+                img_attr=json.loads(item["labels"]) if item.get("labels") else dict(),
             )
         else:
             # 暂时不会遇到
             img_obj =None
 
         if self.config.parse_id_col == "id":
-            key = id
+            key = item["id"]
         elif self.config.parse_id_col == "number":
-            key = number
+            key = item["number"]
         elif self.config.parse_id_col in ("gid","fid"):
-            key = self.config.seq_func(id)
+            key = self.config.seq_func(item["id"])
         else:
-            raise Exception("parse_id_col解析模式只能是id或者number")
+            raise Exception("parse_id_col解析模式错误")
 
         if self.config.overflow ==False:
             if img_obj.position["x"] <0 or img_obj.position["y"]<0 \
