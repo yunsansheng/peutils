@@ -286,18 +286,22 @@ from pprint import pprint
 if __name__ =="__main__":
     ## 单帧
     from pprint import pprint
-    lidar = LidarBoxParse(url="http://oss.prd.appen.com.cn:9000/appen-lidar-prod/e0d86b7d12cb6c681b4db56d3d6d3493/R.1653547658488.2c042042-113f-4e3e-9943-d132840c66c9.628dac8f4597643487fa6761_2022-05-26T034750Z.16845.REWORK.3ca20e08-b852-4c63-846c-7dfaaaa958b8.f4ff151ec65786cb92b00aef77f0a14b.review.json",
+    lidar = LidarBoxParse(url="https://oss-prd.appen.com.cn:9001/tool-prod/6e3149fd2e517f8ead3102ef2b23a55d/R.1654671141185.762645cb-d524-42b8-b5c2-217c002b2066.CLuksAIQAA3d3d_2022-06-08T065143Z.18179.QA_RW.4a1fb325-19b0-4dc4-92d4-c4a95eb29831.38888b56a8a16cda2f27473749a89622.review.json",
                          config =LidarBoxDataConfig(
                              yaw_only = True,
                              has_pointCount= True,
                              number_adpter_func=None, #lambda i: round(i,3), # 默认None
-                             parse_id_col = "gid",
+                             parse_id_col = "fid",
                              seq_start = 0, # 如果是 gid,fid,或者frame_id 需要提供seq_start， 如果是0就是从1开始编号，如果是-1就是从0开始编号
                              overflow= False
                          ))
-    pprint(lidar.frames_lst[49].lidar_dict)
+
+    # pprint(lidar.frames_lst[49].lidar_dict)
     # pprint(lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].rotation)
-    # print(lidar.frames_lst[0].log.error_list)
+    # print(lidar.check_frames_error())
+    # print(lidar.frames_lst[7].log.fomart_error_str())
+    # print(lidar.check_frames_error())
+    # print(json.dumps(lidar()))
     # p = lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].position
     # print(dict_adapter(p,rename={"x":"k","y":"x"},out_adapter=None))
     # {'x': 18.690793403437375, 'y': -56.18997617593776, 'z': -1.380000000000006}
