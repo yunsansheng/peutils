@@ -44,7 +44,61 @@ def dict_adapter(d:dict,out_adapter=None, rename:dict=None):
             d = {rename.get(k, k): v for k, v in d.items()}
     return d
 
+from peutils.pcd_py3 import PointCloud
+import numpy as np
 
+def get_pointlist_from_path(path,fltype=None,dtype=None):
+    # path可以是当时标注的点云对应文件，也可以是客户标注的对应文件，如果是客户的文件，我们要注意是否有去过Nan点，这种需要补点.
+    # path可以是url 也可以是路径
+
+    if fltype not in ("pcd","bin"):
+        raise Exception("fltype必须是pcd或者bin类型")
+    if fltype =="bin":
+        if dtype is None:
+            raise Exception("bin文件必须指定数据类型")
+
+    if fltype =="bin":
+        bin_data = np.fromfile(path,dtype=dtype)
+        return bin_data
+    elif fltype =="pcd":
+        dt = PointCloud.from_path(path)
+        return dt.pc_data
+
+def get_pointlist_from_url(session,url,fltype=None,dtype=None):
+
+    if fltype not in ("pcd","bin"):
+        raise Exception("fltype必须是pcd或者bin类型")
+    if fltype =="bin":
+        if dtype is None:
+            raise Exception("bin文件必须指定数据类型")
+
+    bin_r = session.get(url, stream=True)
+    if fltype == "bin":
+        bin_data = np.frombuffer(bin_r.content, dtype=dtype)
+        bin_r.close()
+        return bin_data  # np的一维数组
+    elif fltype == "pcd":
+        dt = PointCloud.from_buffer(bin_r.content)
+        bin_r.close()
+        return dt.pc_data  # 通过 x y z 等取数据
+
+'''
+ss = get_session()
+p_list = get_pointlist_from_url(ss,"https://appen-storage.oss-cn-shanghai.aliyuncs.com/humor_3d/bucket-dataengine/release/preparation/card_data/icu30/data_label_preprocess/619c8ea93842dacdbf91b66e/center_128_lidar/1636006959490492.pcd",
+                                    fltype="pcd")
+for p in p_list:
+    print(p["x"],p["y"],p["z"],p["intensity"])
+
+p_list = get_pointlist_from_path("/Users/hwang2/Downloads/1636006959490492.pcd",fltype="pcd")
+for p in p_list:
+    print(p["x"],p["y"],p["z"],p["intensity"])
+
+p_array = get_pointlist_from_url(ss,"https://projecteng.oss-cn-shanghai.aliyuncs.com/haomo_3d/segmentation/20210602/HDR006_60b0599b50eb3fa074e490d9_3034_QA/point_cloud/bin_v1/1620539160100000.bin",
+            fltype="bin",dtype="float32")
+p_array = get_pointlist_from_path("/Users/hwang2/Downloads/1620539160100000.bin", fltype="bin",dtype="float32")
+print(p_array[:10])
+
+'''
 
 ### 不兼容老的Plss模版，只兼容新的模版.
 ### 都存在的 id, msg, category(可选). number(可选). frameNum(可选，如果单帧就是0)
@@ -103,7 +157,7 @@ class ErrorMsgLogV1():
                 message = msg,
                 category = obj.category,
                 number = obj.number,
-                frameNum=frameNum,
+                frameNum=obj.frameNum,
                 block=block
             ))
 
@@ -156,10 +210,6 @@ class Lidar3dObj():
         return _data_dict
 
 
-
-
-
-
 class Lidar3dImageRect():
     def __init__(self, frameNum,imageNum, id, number,type, category, position, dimension,
                  img_attr=None):
@@ -193,6 +243,66 @@ class Lidar3dImageRect():
             "position":self.position,
             "dimension":self.dimension,
             "labels":json.dumps(self.img_attr,ensure_ascii=False),
+        }
+        return _data_dict
+
+    def __repr__(self):
+        return f"{self.id} {self.category} {self.number} {self.imageNum}"
+
+
+
+# type points 点,polyline 线
+# pointCount 最好根据数组长度重新算下
+# 点云分割只有实例模式
+'''
+pointsLabels
+[ 
+    [
+       12.747154235839844,
+       5.126907825469971,
+       -1.3931894302368164,
+       86
+    ],
+    ...
+]
+'''
+
+class LidarPointObj():
+    def __init__(self,frameNum ,id,category,number,points,point_attr,pointsLabels,pointCount,type):
+        self.frameNum = frameNum
+        self.id = id
+        self.category = category
+        self.number = number
+        self.points = points
+        self.point_attr = point_attr
+        self.pointsLabels = pointsLabels # 这个是点的 坐标和反射率信息的数组
+        self.pointCount = pointCount
+        self.type = type  # 平台工具多变形，笔刷，单点，都是point,折线是polyline
+
+    def __repr__(self):
+        return f"{self.id} {self.category} {self.number} {len(self.points)}P"
+
+class LidarPointPolyline():
+    def __init__(self, frameNum, imageNum, id, number, type, category, points,
+                 img_attr=None):
+        self.frameNum = frameNum
+        self.imageNum = imageNum  # 图像的次序。从0开始
+        self.id = id
+        self.number = number
+        self.type = type
+        self.category = category
+        self.points = points
+        self.img_attr = img_attr  # 属性
+
+
+    def to_dict(self):
+        _data_dict = {
+            "type": self.type,
+            "id": self.id,
+            "number": self.number,
+            "category": self.category,
+            "points": self.points,
+            "labels": json.dumps(self.img_attr, ensure_ascii=False),
         }
         return _data_dict
 
