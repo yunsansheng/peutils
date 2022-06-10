@@ -250,6 +250,51 @@ class Lidar3dImageRect():
         return f"{self.id} {self.category} {self.number} {self.imageNum}"
 
 
+'''
+categoryColor一般为空不要用，
+'''
+class ImgInstance():
+    def __init__(self,id,category,number,categoryName,categoryColor,ist_attr):
+        # self.frameNum = frameNum  # frameNum用子物体的
+        self.id = id
+        self.category = category
+        self.categoryName = categoryName
+        self.number = number
+        # self.categoryColor = categoryColor
+        self.ist_attr = ist_attr
+        self.obj_list = []
+
+    def __repr__(self):
+        return f"{self.id} {self.category} {self.number} {len(self.obj_list)}T"
+
+
+
+class Img2Dobj():
+    def __init__(self,instance:ImgInstance,
+                 frameNum,id,number,category,
+                 displayName, color,
+                 shapeType,shape,order,img_attr,
+                 isOCR=None,OCRText=""
+                 ):
+        self.instance = instance
+        self.frameNum = frameNum
+        self.id = id
+        self.category = category
+        self.displayName = displayName
+        self.number = number
+        self.color = color
+        self.shapeType = shapeType
+        self.shape = shape
+        self.order = order
+        self.img_attr = img_attr
+        self.isOCR = isOCR
+        self.OCRText = OCRText
+
+    def __repr__(self):
+        return f"F{self.frameNum} {self.id} {self.category} {self.number} {self.shapeType} Order:{self.order} <-[{self.instance.category}]"
+
+
+
 
 # type points 点,polyline 线
 # pointCount 最好根据数组长度重新算下
