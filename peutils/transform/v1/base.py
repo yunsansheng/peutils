@@ -14,6 +14,10 @@ from requests.adapters import HTTPAdapter
 import inspect
 import json
 from peutils.textutil import gen_uuid
+from peutils.pcd_py3 import PointCloud
+import numpy as np
+
+
 
 def get_session(retry=3):
     session = requests.Session()
@@ -44,8 +48,6 @@ def dict_adapter(d:dict,out_adapter=None, rename:dict=None):
             d = {rename.get(k, k): v for k, v in d.items()}
     return d
 
-from peutils.pcd_py3 import PointCloud
-import numpy as np
 
 def get_pointlist_from_path(path,fltype=None,dtype=None):
     # path可以是当时标注的点云对应文件，也可以是客户标注的对应文件，如果是客户的文件，我们要注意是否有去过Nan点，这种需要补点.

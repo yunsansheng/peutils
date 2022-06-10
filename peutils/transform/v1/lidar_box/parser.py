@@ -295,7 +295,7 @@ if __name__ =="__main__":
                              seq_start = 0, # 如果是 gid,fid,或者frame_id 需要提供seq_start， 如果是0就是从1开始编号，如果是-1就是从0开始编号
                              overflow= False
                          ))
-
+    lidar.check_frames_error()
     # pprint(lidar.frames_lst[49].lidar_dict)
     # pprint(lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].rotation)
     # print(lidar.check_frames_error())
