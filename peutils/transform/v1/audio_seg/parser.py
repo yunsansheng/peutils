@@ -32,11 +32,11 @@ class AudioSegFrame():
         if self.config.segment_mode =="continuous":
             if len(self.frame_obj_list) != 0:
                 if obj.start != self.frame_obj_list[-1].end:
-                    self.log.create_error("连续模式下新增切分段开始时间必须等于上一个结束时间")
+                    self.log.create_error("连续模式下新增切分段开始时间必须等于上一个结束时间",obj=obj)
         elif  self.config.segment_mode =="individual":
             if len(self.frame_obj_list) != 0:
                 if obj.start < self.frame_obj_list[-1].start:
-                    self.log.create_error("分段模式下，每个开始时间必须大于上一个结束时间")
+                    self.log.create_error("分段模式下，每个开始时间必须大于上一个结束时间",obj=obj)
         self.frame_obj_list.append(obj)
 
 
