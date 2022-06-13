@@ -296,6 +296,19 @@ class Img2Dobj():
         return f"F{self.frameNum} {self.id} {self.category} {self.number} {self.shapeType} Order:{self.order} <-[{self.instance.category}]"
 
 
+class AudioCutObj():
+    def __init__(self,frameNum,id,number, start,end,block_attr,line_contents,category=""):
+        self.frameNum = frameNum
+        self.id = id
+        self.number = number
+        self.category = category
+        self.start = start
+        self.end = end
+        self.block_attr = block_attr
+        self.line_contents = line_contents # 对应content字段
+
+    def __repr__(self):
+        return f"{self.id} {self.category} {self.number} {self.start} {self.end}"
 
 
 # type points 点,polyline 线
