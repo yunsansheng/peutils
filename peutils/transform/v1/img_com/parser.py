@@ -48,8 +48,8 @@ class ImgComParse(CommonBaseMixIn):
         self.url = url
         self.config = config
         self.raw_data = self.get_raw_data(url) # 获取JSON字典数据数据
-        self.instance_lst,self.object_lst = self.parse_by_instance()
-        self.frames_lst = self.parse_by_frame()
+        self.instance_lst, self.object_lst = self.parse_by_instance()
+        self.frames_lst, self.frame_length = self.parse_by_frame()
 
 
     def check_frames_error(self):
@@ -80,7 +80,7 @@ class ImgComParse(CommonBaseMixIn):
         for f in frames_lst:
             f.frame_obj_list.sort(key=lambda i: -1 if i.order is None else i.order)
 
-        return frames_lst
+        return frames_lst,len(frames_lst)
 
     def parse_by_instance(self):
 

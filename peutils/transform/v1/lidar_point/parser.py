@@ -239,7 +239,7 @@ class LidarPointParse(CommonBaseMixIn):
             self.config.seq_func = gen_uuid_seq(start=self.config.seq_start)
 
         self.raw_data = self.get_raw_data(url) # 获取JSON字典数据数据
-        self.frames_lst = self.parse_by_frame()
+        self.frames_lst,self.frame_length = self.parse_by_frame()
 
 
     def check_frames_error(self):
@@ -279,7 +279,7 @@ class LidarPointParse(CommonBaseMixIn):
                 config= self.config
             )
             frames_lst.append(frame)
-        return frames_lst
+        return frames_lst,len(frames_lst)
 
 
 class LidarPointDataConfig():
