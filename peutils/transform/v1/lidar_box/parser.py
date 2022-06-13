@@ -70,7 +70,7 @@ class LidarBoxFrame():
         quaternion =dict_adapter(item["quaternion"],out_adapter=self.config.number_adpter_func)
 
         ### 解析点云数量
-        if item.get("pointCount") and item.get("pointCount").get("lidar"):
+        if item.get("pointCount") and item.get("pointCount").get("lidar") is not None:
             pointCount = item["pointCount"]["lidar"]
         else:
             pointCount = None
