@@ -256,13 +256,13 @@ class Lidar3dImageRect():
 categoryColor一般为空不要用，
 '''
 class ImgInstance():
-    def __init__(self,id,category,number,categoryName,categoryColor,ist_attr):
+    def __init__(self,id,category,number,categoryName=None,ist_attr=None):
         # self.frameNum = frameNum  # frameNum用子物体的
         self.id = id
         self.category = category
         self.categoryName = categoryName
         self.number = number
-        # self.categoryColor = categoryColor
+        # self.categoryColor = categoryColor # 不用这个属性
         self.ist_attr = ist_attr
         self.obj_list = []
 
@@ -274,9 +274,9 @@ class ImgInstance():
 class Img2Dobj():
     def __init__(self,instance:ImgInstance,
                  frameNum,id,number,category,
-                 displayName, color,
-                 shapeType,shape,order,img_attr,
-                 isOCR=None,OCRText=""
+                 shapeType,order=None,shape=None,img_attr=None,
+                 displayName="", color="",
+                 isOCR=None,OCRText=None
                  ):
         self.instance = instance
         self.frameNum = frameNum

@@ -23,22 +23,30 @@ class ImgComFrame():
         self.isValid = isValid
         self.imageWidth = imageWidth
         self.imageHeight = imageHeight
-        self.rotation =rotation
+        self.rotation = rotation
 
         self.log = ErrorMsgLogV1()
         self.config = config
         self.frame_attr = frame_attr
-        self.frame_obj_list = []
+        self.frame_items = []
 
 
     def add_frame_obj(self,obj:Img2Dobj):
         if obj.order is None:
             self.log.create_error("order检查模式下不能缺失",obj=obj)
-        self.frame_obj_list.append(obj)
+        self.frame_items.append(obj)
+
+    def to_pre_dict(self):
+        _pre_dict = {
+            "frameId":self.frameId,
+            "frame_attr":self.frame_attr,
+            "frame_items":self.frame_items
+        }
+        return _pre_dict
 
 
     def __repr__(self):
-        return f'Frame {self.frameId} {len(self.frame_obj_list)}T'
+        return f'Frame {self.frameId} {len(self.frame_items)}T'
 
 
 class ImgComParse(CommonBaseMixIn):
@@ -78,7 +86,7 @@ class ImgComParse(CommonBaseMixIn):
 
         ### 对order进行检查并且排序数据,缺失的数据排在最前面.
         for f in frames_lst:
-            f.frame_obj_list.sort(key=lambda i: -1 if i.order is None else i.order)
+            f.frame_items.sort(key=lambda i: -1 if i.order is None else i.order)
 
         return frames_lst,len(frames_lst)
 
@@ -91,7 +99,7 @@ class ImgComParse(CommonBaseMixIn):
                 id=instance["id"],
                 category = instance["category"],
                 categoryName = instance["categoryName"],
-                categoryColor = instance["categoryColor"],
+                # categoryColor = instance["categoryColor"],
                 number = instance["number"],
                 ist_attr = instance.get("attributes") if instance.get("attributes") else dict()
             )
@@ -139,13 +147,14 @@ if __name__ =="__main__":
     img = ImgComParse(url="https://oss-prd.appen.com.cn:9001/tool-prod/a2a3ef0c-55c4-4d15-8cc2-ff6aeb7878dd/R.1650783983510.a2a3ef0c-55c4-4d15-8cc2-ff6aeb7878dd.CODU4AEQEg3d3d_2022-04-24T070156Z.18107.result.json",
                          config =ImgComDataConfig(
                          ))
+    print(img.frames_lst[0].frame_items)
 
     # pprint(img.instance_lst)
     # pprint(img.object_lst)
     # pprint(img.frames_lst)
     # pprint(img.frames_lst[0].)
     # img.frames_lst[9].frame_obj_list.sort(key=lambda i: i.order)
-    pprint(img.frames_lst[9].frame_obj_list)
+    pprint(img.frames_lst[9].frame_items)
     pprint(img.frames_lst[9].log.error_list)
     # pprint(img)
     # pprint(img.object_lst)
