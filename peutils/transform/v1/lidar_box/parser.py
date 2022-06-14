@@ -277,7 +277,7 @@ class LidarBoxDataConfig():
         self.yaw_only = yaw_only
         self.has_pointCount = has_pointCount
         self.number_adpter_func = number_adpter_func
-        self.parse_id_col = parse_id_col # id或number ,g_id, frame_id
+        self.parse_id_col = parse_id_col # id或number ,gid, fid
         self.seq_start = seq_start
         self.overflow = overflow # 默认不允许超出图像边界
 
@@ -291,12 +291,15 @@ if __name__ =="__main__":
                              yaw_only = True,
                              has_pointCount= True,
                              number_adpter_func=None, #lambda i: round(i,3), # 默认None
-                             parse_id_col = "fid",
+                             parse_id_col = "gid",
                              seq_start = 0, # 如果是 gid,fid,或者frame_id 需要提供seq_start， 如果是0就是从1开始编号，如果是-1就是从0开始编号
                              overflow= False
                          ))
-    lidar.check_frames_error()
-    # pprint(lidar.frames_lst[49].lidar_dict)
+    # pprint(lidar.check_frames_error())
+    # pprint(lidar.frames_lst[0].lidar_dict)
+    # for k,v in lidar.frames_lst[0].lidar_dict.items():
+    #     print(k,v.position,v.pointCount,v.lidar_attr)
+    # pprint(lidar.frames_lst[1].lidar_dict)
     # pprint(lidar.frames_lst[0].lidar_dict["06e41560-32ac-436d-a0c0-3e4aae7d4858"].rotation)
     # print(lidar.check_frames_error())
     # print(lidar.frames_lst[7].log.fomart_error_str())
@@ -309,6 +312,7 @@ if __name__ =="__main__":
     # print(lidar.frames_lst[0].camera_list)
     # print(lidar.frames_lst[0].camera_meta)
     # pprint(lidar.frames_lst[0].images_dict)
+    # pprint(lidar.frames_lst[0].images_list)
     # print(lidar.frames_lst[0].only_image_idset)
     # print(lidar.frames_lst[0].get_img_obj_list(id="f661d8a6-ad24-4f95-b034-67983b17709f"))
     # print(lidar.frames_lst[0].get_img_obj_list(id="f661d8a6-ad24-4f95-b034-67983b17709f",keep_nan=True))

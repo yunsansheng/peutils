@@ -147,15 +147,20 @@ if __name__ =="__main__":
     img = ImgComParse(url="https://oss-prd.appen.com.cn:9001/tool-prod/a2a3ef0c-55c4-4d15-8cc2-ff6aeb7878dd/R.1650783983510.a2a3ef0c-55c4-4d15-8cc2-ff6aeb7878dd.CODU4AEQEg3d3d_2022-04-24T070156Z.18107.result.json",
                          config =ImgComDataConfig(
                          ))
-    print(img.frames_lst[0].frame_items)
+    # print(img.frames_lst[0].frame_items)
 
     # pprint(img.instance_lst)
+    # pprint(img.instance_lst[0].obj_list)
     # pprint(img.object_lst)
-    # pprint(img.frames_lst)
+
+    # pprint(img.frames_lst[0].frame_items)
+    # for item in img.frames_lst[0].frame_items:
+    #     print(item.instance)
+
     # pprint(img.frames_lst[0].)
     # img.frames_lst[9].frame_obj_list.sort(key=lambda i: i.order)
-    pprint(img.frames_lst[9].frame_items)
-    pprint(img.frames_lst[9].log.error_list)
+    # pprint(img.frames_lst[9].frame_items)
+    # pprint(img.frames_lst[9].log.error_list)
     # pprint(img)
     # pprint(img.object_lst)
 
