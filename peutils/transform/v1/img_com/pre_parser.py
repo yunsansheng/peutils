@@ -126,7 +126,7 @@ class ImgComPre():
         )
 
 
-    def to_instances_data(self):
+    def dumps_data(self):
         _to_instances_dict = {
             "instances":[ i.to_pre_dict() for i in self.instance_lst],
             "frames":[
@@ -154,7 +154,7 @@ if __name__ =="__main__":
         ))
     imgpre = ImgComPre(frame_length =img.frame_length ,
                        instance_lst=img.instance_lst,raw_frames=img.raw_data["frames"])
-    print(imgpre.to_instances_data())
+    print(imgpre.dumps_data())
     #### 加载之前的数据
 
     ### 创建新的数据
@@ -172,5 +172,5 @@ if __name__ =="__main__":
     ### 添加一个新的分类物体，但是标签相同
     imgpre2.add_img_obj(instance=ist1, uuid="dd", frameNum=1, c_category="汽车头", shapeType="line2", shape={"kk": 2},
                         c_attributes={"w": "2"})
-    print(imgpre2.to_instances_data())
+    print(imgpre2.dumps_data())
     ### 先创建instance,写入这个instatnce所有的内容，再写入image对象。
