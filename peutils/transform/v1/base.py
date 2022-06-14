@@ -269,6 +269,44 @@ class ImgInstance():
     def __repr__(self):
         return f"{self.id} {self.category} {self.number} {len(self.obj_list)}T"
 
+    def to_pre_dict(self):
+        _pre_data_dict = {
+            "id":self.id,
+            "category":self.category,
+            "number": self.number,
+            "attributes":self.ist_attr,
+            "children":[
+            ]
+        }
+
+        ## 计算child_dict
+        child_dict = dict()
+        for item in self.obj_list:
+            child_id = item.id
+            if child_id not in child_dict:
+                child_dict[child_id] = {
+                    "id": item.id,
+                    "name": item.category,
+                    "number": item.number,
+                    "cameras": [{
+                        "camera": "default",
+                        "frames": []
+                    }]
+                }
+            ## 添加这条数据到frames信息中
+            child_dict[child_id]["cameras"][0]["frames"].append({
+                "frameIndex": item.frameNum,
+                "isKeyFrame": True,
+                "shapeType": item.shapeType,
+                "shape": item.shape,
+                "order": item.order,
+                "attributes": item.img_attr
+            })
+        for _,v in child_dict.items():
+            _pre_data_dict["children"].append(v)
+        return  _pre_data_dict
+
+
 
 
 class Img2Dobj():

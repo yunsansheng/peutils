@@ -77,3 +77,43 @@ for i in range(3):
     my_uuid()
 
 '''
+
+class GenCategorySeq():
+    def __init__(self,start=0,default_dict=None):
+        self.start = start
+        self.uuid_dict = dict() if default_dict is None else default_dict
+
+    def up_seq(self,uuid):
+        if uuid not in self.uuid_dict:
+            self.uuid_dict[uuid] = self.start +1
+        else:
+            self.uuid_dict[uuid] = self.uuid_dict[uuid]+1
+
+        return self.uuid_dict[uuid]
+
+    def get_seq(self,uuid):
+        return self.uuid_dict.get(uuid,self.start)
+'''
+不带初始数据
+category_seq = GenCategorySeq(start=0)
+print(category_seq.up_seq("a"))
+print(category_seq.up_seq("b"))
+print(category_seq.up_seq("a"))
+1
+1
+2
+
+'''
+
+'''
+带初始数据
+category_seq = GenCategorySeq(default_dict={"a":10})
+print(category_seq.up_seq("a"))
+print(category_seq.up_seq("b"))
+print(category_seq.up_seq("a"))
+
+11
+1
+12
+'''
+

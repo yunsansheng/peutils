@@ -36,13 +36,13 @@ class ImgComFrame():
             self.log.create_error("order检查模式下不能缺失",obj=obj)
         self.frame_items.append(obj)
 
-    def to_pre_dict(self):
-        _pre_dict = {
-            "frameId":self.frameId,
-            "frame_attr":self.frame_attr,
-            "frame_items":self.frame_items
-        }
-        return _pre_dict
+    # def to_pre_dict(self):
+    #     _pre_dict = {
+    #         "frameId":self.frameId,
+    #         "frame_attr":self.frame_attr,
+    #         "frame_items":self.frame_items
+    #     }
+    #     return _pre_dict
 
 
     def __repr__(self):
@@ -76,7 +76,7 @@ class ImgComParse(CommonBaseMixIn):
                 imageHeight = raw_frame["imageHeight"],
                 isValid= raw_frame["valid"],
                 rotation = raw_frame["rotation"],
-                frame_attr= raw_frame.get("attributes") if raw_frame.get("attributes") else dict(),
+                frame_attr= raw_frame.get("attributes",dict()),
                 config=self.config
             )
             frames_lst.append(frame)
@@ -101,7 +101,7 @@ class ImgComParse(CommonBaseMixIn):
                 categoryName = instance["categoryName"],
                 # categoryColor = instance["categoryColor"],
                 number = instance["number"],
-                ist_attr = instance.get("attributes") if instance.get("attributes") else dict()
+                ist_attr = instance.get("attributes",dict())
             )
             obj_list = []
             for ch in instance["children"]:
@@ -117,7 +117,7 @@ class ImgComParse(CommonBaseMixIn):
                         shapeType = obj["shapeType"],
                         shape = obj["shape"],
                         order = obj.get("order"),# 测试None if ch["id"] =="faeb43ff-546b-4f80-b99b-8e4eeb62f112" else obj.get("order"),
-                        img_attr = obj.get("attributes") if instance.get("attributes") else dict(),
+                        img_attr = obj.get("attributes",dict()),
                         isOCR= obj.get("isOCR",False),
                         OCRText= obj.get("OCRText","")
                     )

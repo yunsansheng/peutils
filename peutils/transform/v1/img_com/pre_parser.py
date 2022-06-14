@@ -22,7 +22,7 @@ Change History:
           "cameras": [
             {
               "camera": "default", // 请对应模板数据（若为单相机，则默认为default）
-              "frames": [
+              "frames": [   //如果只有一个摄像头的话，这边。
                 {
                   "frameIndex": 0,
                   "isKeyFrame": true, // 预标数据默认为关键帧true
@@ -43,39 +43,134 @@ Change History:
 '''
 import json
 from peutils.transform.v1.base import *
-
+from collections import defaultdict
+from operator import itemgetter
+from itertools import groupby
+from peutils.transform.v1.base import ImgInstance,Img2Dobj
+from peutils.textutil import gen_uuid
+from peutils.datautil import GenCategorySeq
 
 class ImgComPre():
     ### 提供ImgComFrame实例对象frame_list，或者提供frame_length构造一个空的
-    def __init__(self,frame_length,frames_lst=None):
+    def __init__(self,frame_length,instance_lst=None,raw_frames=None):
 
         self.frame_length = frame_length
 
-        if frames_lst is not None:
-            self.frames_lst = [ f.to_pre_dict() for f in frames_lst]
+        if raw_frames is not None:
+            self.frames = [
+                {
+                    "frameIndex": f["frameIndex"],
+                    "attributes": f.get("attributes",dict())
+                }
+                for f in raw_frames[0]["frames"]
+            ]
         else:
-            ### 构造空的
-            self.frames_lst = [{
-                "frameId": i,
-                "frame_attr": dict(),
-                "frame_items": [],
-            } for i in range(self.frame_length)]
+            ### 构造一个空的属性
+            self.frames = [
+                {
+                    "frameIndex": i,
+                    "attributes": {}
+                } for i in range(self.frame_length)]
+
+        if instance_lst is not None:
+            self.instance_lst = instance_lst
+        else:
+            self.instance_lst = []
+
+        self.instance_seq = GenCategorySeq()
+        self.imgobj_seq = GenCategorySeq()
+        self.frameorder_seq = GenCategorySeq()
+
+    def add_instance_obj(self,p_category,p_attributes=None):
+        "p_id 生成p number序列 从1开始。 按照分类生成"
+        ist_number = self.instance_seq.up_seq(p_category)
+        ist = ImgInstance(
+            id = gen_uuid(),
+            number = ist_number,
+            category = p_category,
+            ist_attr = p_attributes if p_attributes else dict(),
+        )
+        self.instance_lst.append(ist)
+        return ist
+
+    def add_img_obj(self,instance,uuid,frameNum,c_category,shapeType,shape,c_attributes=None):
+        # child_seq = self.instance_seq.up_seq(c_category)
+        ### 先判断uuid + c_category 当前有没有
+
+        ### 按每一帧进行编号
+        frame_order = self.frameorder_seq.up_seq(str(frameNum))
+        # print("frame_order",frame_order)
+
+        obj = None
+        for o in instance.obj_list:
+            if o.id == uuid:
+                obj = o
+        if obj is None:
+            # 识别到新的ID边用c_category 获取一个新的编号
+            child_number = self.imgobj_seq.up_seq(c_category)
+        else:
+            child_number = self.imgobj_seq.get_seq(c_category)
+
+        instance.obj_list.append(
+                Img2Dobj(
+                    instance=instance,
+                    frameNum=frameNum,
+                    id = uuid,
+                    number = child_number,
+                    category=c_category,
+                    shapeType = shapeType,
+                    shape = shape,
+                    img_attr= c_attributes if c_attributes else dict(),
+                    order = frame_order
+                )
+        )
 
 
+    def to_instances_data(self):
+        _to_instances_dict = {
+            "instances":[ i.to_pre_dict() for i in self.instance_lst],
+            "frames":[
+                {
+                    "camera":"default",
+                    "frames":self.frames
+                }
+            ]
+        }
+        instances_data = json.dumps(_to_instances_dict,ensure_ascii=False)
+        return instances_data
 
 
 
 
 if __name__ =="__main__":
     from pprint import pprint
+
+    ### 之前数据的加载
     from peutils.transform.v1.img_com.parser import ImgComParse,ImgComDataConfig
     img = ImgComParse(
+        # url = "https://oss-prd.appen.com.cn:9001/tool-prod/preview--r9nHFGv7vcbBW7P-JQ7t/preview--r9nHFGv7vcbBW7P-JQ7t.video-track-v2_task.video-track-v2_record.result.json",
         url="https://oss-prd.appen.com.cn:9001/tool-prod/a2a3ef0c-55c4-4d15-8cc2-ff6aeb7878dd/R.1650783983510.a2a3ef0c-55c4-4d15-8cc2-ff6aeb7878dd.CODU4AEQEg3d3d_2022-04-24T070156Z.18107.result.json",
         config=ImgComDataConfig(
         ))
-    # print(img.frame_length)
-    # print(img.frames_lst)
+    imgpre = ImgComPre(frame_length =img.frame_length ,
+                       instance_lst=img.instance_lst,raw_frames=img.raw_data["frames"])
+    print(imgpre.to_instances_data())
+    #### 加载之前的数据
 
-    imgpre = ImgComPre(frame_length=img.frame_length,frames_lst=img.frames_lst)
-    pprint(imgpre.frames_lst)
+    ### 创建新的数据
+    from peutils.transform.v1.base import ImgInstance,Img2Dobj
+    imgpre2 = ImgComPre(frame_length=img.frame_length)
+    ist1 = imgpre2.add_instance_obj(p_category="小汽车",p_attributes={"a":1})
 
+    ### id如果和之前相同，那么这里写入的时候会当成同一个物体写入，有tracking的功能。
+    ### 这边的c_category 注意是平台这个子组建下的名称，不要放错到其他实例中
+    ### 如果相同id 但是c_category 不一样那么重新创建一个child.
+    imgpre2.add_img_obj(instance=ist1,uuid ="abc",frameNum=1,c_category="汽车头",shapeType="line",shape={"kk":1},c_attributes={"w":None})
+    imgpre2.add_img_obj(instance=ist1, uuid="abc", frameNum=2, c_category="汽车头", shapeType="line2", shape={"kk": 2},
+                        c_attributes={"w": "2"})
+
+    ### 添加一个新的分类物体，但是标签相同
+    imgpre2.add_img_obj(instance=ist1, uuid="dd", frameNum=1, c_category="汽车头", shapeType="line2", shape={"kk": 2},
+                        c_attributes={"w": "2"})
+    print(imgpre2.to_instances_data())
+    ### 先创建instance,写入这个instatnce所有的内容，再写入image对象。
