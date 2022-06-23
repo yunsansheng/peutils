@@ -82,7 +82,7 @@ class LidarBoxFrame():
         2.如果has_pointCount是True,检查pointCount 不是None
         '''
         lidar_obj = Lidar3dObj(
-            frameNum= item["frameNum"],
+            frameNum= self.frameId, #item["frameNum"],
             id = item["id"],
             number= item["number"],
             category=item["category"],
@@ -126,7 +126,7 @@ class LidarBoxFrame():
         '''
         if item["type"] =="RECT":
             img_obj = Lidar3dImageRect(
-                frameNum=item["frameNum"],
+                frameNum= self.frameId, #item["frameNum"],
                 imageNum=item["imageNum"],
                 id=item["id"],
                 number=item["number"],

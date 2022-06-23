@@ -105,8 +105,37 @@ class LidarBoxPre():
 
 
 if __name__ =="__main__":
-    ldboxpre = LidarBoxPre(frame_length = 50,camera_list=['front_middle_camera', 'lf_wide_camera', 'lr_wide_camera', 'rear_middle_camera', 'rf_wide_camera', 'rr_wide_camera'])
-    print(ldboxpre.dumps_data())
+    pass
+
+    # from peutils.transform.v1.lidar_manifest.parser import LidarManifestParse,LidarManifestConfig
+    # msft = LidarManifestParse(base_url="https://projecteng.oss-cn-shanghai.aliyuncs.com/3d_json/test_shuima/2022-05-20-09-38-20-04/json/2022-05-20-09-38-20-04_1_50",
+    #                           config=LidarManifestConfig())
+    # ldboxpre2 = LidarBoxPre(frame_length=msft.frame_length,camera_list=msft.camera_list)
+    #
+    # from peutils.transform.v1.lidar_box.parser import LidarBoxParse,LidarBoxDataConfig
+    # parse_obj = LidarBoxParse(url="https://projecteng.oss-cn-shanghai.aliyuncs.com/3d_json/test_shuima/2022-05-20-09-38-20-04/R.1655858875766.202.19671_2022-06-21T202615Z.599.QA_RW.27895.0f0425a96442183be87772da04b197a0.review.json",
+    #                               config=LidarBoxDataConfig(
+    #                                   yaw_only=False,
+    #                                   has_pointCount=False,
+    #                                   number_adpter_func=None,  # lambda i: round(i,3), # 默认None
+    #                                   parse_id_col="id",
+    #                                   seq_start=0,  # 如果是 gid,fid,或者frame_id 需要提供seq_start， 如果是0就是从1开始编号，如果是-1就是从0开始编号
+    #                                   overflow=True
+    #                               )
+    # )
+    # for _,lidar in parse_obj.frames_lst[0].lidar_dict.items():
+    #     # lidar.p
+    #     ldboxpre2.add_lidar_obj(frameNum=0,lidar_obj=lidar)
+    # for camera, img_dict in parse_obj.frames_lst[0].images_dict.items():  ##注意 这个cemra不一定准确
+    #     for k,v in img_dict.items():
+    #     # print(camera,img)
+    #         ldboxpre2.add_img_obj(frameNum=0, camera=camera, img_obj=v)
+    # # print(ldboxpre2)
+    # print(ldboxpre2.dumps_data())
+
+
+    # ldboxpre = LidarBoxPre(frame_length = 50,camera_list=['front_middle_camera', 'lf_wide_camera', 'lr_wide_camera', 'rear_middle_camera', 'rf_wide_camera', 'rr_wide_camera'])
+    # print(ldboxpre.dumps_data())
 
     # self.frames = {}
 
