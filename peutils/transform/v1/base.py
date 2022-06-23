@@ -152,13 +152,13 @@ class Lidar3dObj():
             "position":self.position,
             "rotation":self.rotation,
             "dimension":self.dimension,
-            "labels":json.dumps(self.lidar_attr,ensure_ascii=False),
+            "labels":"" if self.lidar_attr is None else json.dumps(self.lidar_attr,ensure_ascii=False),
         }
         return _data_dict
 
 
 class Lidar3dImageRect():
-    def __init__(self, frameNum,imageNum, id, number,type, category, position, dimension,
+    def __init__(self, frameNum, id, number,type, category, position, dimension,imageNum=None,
                  img_attr=None):
         self.frameNum = frameNum
         self.imageNum = imageNum # 图像的次序。从0开始
@@ -189,7 +189,7 @@ class Lidar3dImageRect():
             "category":self.category,
             "position":self.position,
             "dimension":self.dimension,
-            "labels":json.dumps(self.img_attr,ensure_ascii=False),
+            "labels":"" if self.img_attr is None else json.dumps(self.img_attr,ensure_ascii=False),
         }
         return _data_dict
 
@@ -345,7 +345,7 @@ class LidarPointPolyline():
             "number": self.number,
             "category": self.category,
             "points": self.points,
-            "labels": json.dumps(self.img_attr, ensure_ascii=False),
+            "labels": "" if self.img_attr is None else json.dumps(self.img_attr, ensure_ascii=False),
         }
         return _data_dict
 
