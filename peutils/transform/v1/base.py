@@ -14,6 +14,8 @@ from requests.adapters import HTTPAdapter
 import inspect
 import json
 from peutils.textutil import gen_uuid
+from typing import Dict, List,Union
+
 
 
 
@@ -50,7 +52,7 @@ def dict_adapter(d:dict,out_adapter=None, rename:dict=None):
 ### 不兼容老的Plss模版，只兼容新的模版.
 ### 都存在的 id, msg, category(可选). number(可选). frameNum(可选，如果单帧就是0)
 class ErrorUnit():
-    def __init__(self,id,message,category=None,number=None,frameNum=None,block=True):
+    def __init__(self,id,message,category=None,number=None,frameNum:Union[List[int],int,None]=None,block=True):
         self.id = id
         self.message = message
         self.category = category
@@ -70,7 +72,7 @@ class ErrorUnit():
 
     def __repr__(self):
         if self.frameList !=[0]:
-            err_str = f"帧:{self.frameList} ID:{self.id} Message:{self.message} "
+            err_str = f"帧:{[x+1 for x in self.frameList]} ID:{self.id} Message:{self.message} "
         else:
             err_str = f"ID:{self.id} Message:{self.message} "
 
@@ -88,7 +90,7 @@ class ErrorMsgLogV1():
     def __init__(self):
         self.error_list = []
 
-    def create_error(self,msg,obj=None,frameNum=None,block=True):
+    def create_error(self,msg,obj=None,frameNum:Union[List[int],int,None]=None,block=True):
         if obj is None:
             self.error_list.append(ErrorUnit(
                 id = "common-" + gen_uuid(),
@@ -110,7 +112,7 @@ class ErrorMsgLogV1():
 
 
     def fomart_error_str(self)->str:
-        return json.dumps([repr(e) for e in self.error_list],ensure_ascii=False)
+        return "\n".join([repr(e) for e in self.error_list])
         # 如果frame是0，不打印。
 
     def format_a9_error_str(self)->str:
