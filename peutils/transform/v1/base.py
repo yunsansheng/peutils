@@ -17,7 +17,24 @@ from peutils.textutil import gen_uuid
 from typing import Dict, List,Union
 
 
+class DotDict(dict):
+    def __init__(self,*args,**kwargs):
+        super(DotDict, self).__init__(*args,**kwargs)
 
+    def __getattr__(self, key):
+        value = self[key]
+        if isinstance(value,dict):
+            value = DotDict(value)
+        return value
+
+# print(json.dumps(DotDict()))
+# print(json.dumps(a))
+# print(a["a"])
+# a = DotDict()
+# a["a"] = 1
+#
+# print(a)
+# print(bool(DotDict()))
 
 def get_session(retry=3):
     session = requests.Session()
@@ -134,12 +151,12 @@ class Lidar3dObj():
         self.id = id
         self.number = number
         self.category = category
-        self.position = position
-        self.rotation = rotation
-        self.dimension = dimension
+        self.position = DotDict(position)
+        self.rotation = DotDict(rotation)
+        self.dimension = DotDict(dimension)
 
-        self.lidar_attr = lidar_attr  # 属性
-        self.quaternion = quaternion
+        self.lidar_attr = DotDict(lidar_attr) if lidar_attr else DotDict() # 属性
+        self.quaternion = DotDict(quaternion) if quaternion else DotDict()
         self.pointCount = pointCount
 
     def __repr__(self):
@@ -154,7 +171,7 @@ class Lidar3dObj():
             "position":self.position,
             "rotation":self.rotation,
             "dimension":self.dimension,
-            "labels":"" if self.lidar_attr is None else json.dumps(self.lidar_attr,ensure_ascii=False),
+            "labels":"" if self.lidar_attr else json.dumps(self.lidar_attr,ensure_ascii=False),
         }
         return _data_dict
 
@@ -168,10 +185,10 @@ class Lidar3dImageRect():
         self.number = number
         self.type = type
         self.category = category
-        self.position = position
-        self.dimension = dimension
+        self.position = DotDict(position)
+        self.dimension = DotDict(dimension)
 
-        self.img_attr = img_attr  # 属性
+        self.img_attr = DotDict(img_attr) if img_attr else DotDict()  # 属性
 
         self.bbox =self.get_bbox()
 
@@ -191,7 +208,7 @@ class Lidar3dImageRect():
             "category":self.category,
             "position":self.position,
             "dimension":self.dimension,
-            "labels":"" if self.img_attr is None else json.dumps(self.img_attr,ensure_ascii=False),
+            "labels":"" if self.img_attr else json.dumps(self.img_attr,ensure_ascii=False),
         }
         return _data_dict
 
@@ -210,7 +227,7 @@ class ImgInstance():
         self.categoryName = categoryName
         self.number = number
         # self.categoryColor = categoryColor # 不用这个属性
-        self.ist_attr = ist_attr
+        self.ist_attr = DotDict(ist_attr) if ist_attr else DotDict()
         self.obj_list = []
 
     def __repr__(self):
@@ -271,9 +288,9 @@ class Img2Dobj():
         self.number = number
         self.color = color
         self.shapeType = shapeType
-        self.shape = shape
+        self.shape = DotDict(shape) if shape else DotDict()
         self.order = order
-        self.img_attr = img_attr
+        self.img_attr = DotDict(img_attr) if img_attr else DotDict()
         self.isOCR = isOCR
         self.OCRText = OCRText
 
@@ -282,14 +299,14 @@ class Img2Dobj():
 
 
 class AudioCutObj():
-    def __init__(self,frameNum,id,number, start,end,block_attr,line_contents,category=""):
+    def __init__(self,frameNum,id,number,start,end,block_attr,line_contents,category=""):
         self.frameNum = frameNum
         self.id = id
         self.number = number
         self.category = category
         self.start = start
         self.end = end
-        self.block_attr = block_attr
+        self.block_attr = DotDict(block_attr) if block_attr else DotDict()
         self.line_contents = line_contents # 对应content字段
 
     def __repr__(self):
