@@ -107,6 +107,7 @@ class LidarBoxPre():
 if __name__ =="__main__":
     pass
 
+
     # from peutils.transform.v1.lidar_manifest.parser import LidarManifestParse,LidarManifestConfig
     # msft = LidarManifestParse(base_url="https://projecteng.oss-cn-shanghai.aliyuncs.com/3d_json/test_shuima/2022-05-20-09-38-20-04/json/2022-05-20-09-38-20-04_1_50",
     #                           config=LidarManifestConfig())
@@ -125,13 +126,24 @@ if __name__ =="__main__":
     # )
     # for _,lidar in parse_obj.frames_lst[0].lidar_dict.items():
     #     # lidar.p
+    #     if lidar.dimension["x"] < lidar.dimension["y"]:
+    #         new_x = lidar.dimension["y"]
+    #         new_y = lidar.dimension["x"]
+    #         lidar.dimension["x"]  = new_x
+    #         lidar.dimension["y"] = new_y
+    #
     #     ldboxpre2.add_lidar_obj(frameNum=0,lidar_obj=lidar)
     # for camera, img_dict in parse_obj.frames_lst[0].images_dict.items():  ##注意 这个cemra不一定准确
     #     for k,v in img_dict.items():
     #     # print(camera,img)
     #         ldboxpre2.add_img_obj(frameNum=0, camera=camera, img_obj=v)
     # # print(ldboxpre2)
+    #
+    #
     # print(ldboxpre2.dumps_data())
+    # with open("review_replace_xy.json","w",encoding="utf-8") as f:
+    #     f.write(ldboxpre2.dumps_data())
+
 
 
     # ldboxpre = LidarBoxPre(frame_length = 50,camera_list=['front_middle_camera', 'lf_wide_camera', 'lr_wide_camera', 'rear_middle_camera', 'rf_wide_camera', 'rr_wide_camera'])
