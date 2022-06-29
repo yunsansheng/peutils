@@ -151,4 +151,19 @@ if __name__ =="__main__":
 
     # self.frames = {}
 
+    ### 在0，0，0 点 写入一个 长宽高
+    # from peutils.transform.v1.lidar_manifest.parser import LidarManifestParse,LidarManifestConfig
+    # from peutils.transform.v1.base import Lidar3dObj
+    # ldboxpre3 = LidarBoxPre(frame_length=1, camera_list=[])
+    # ldboxpre3.add_lidar_obj(frameNum=0, lidar_obj=Lidar3dObj(
+    #     frameNum=0,
+    #     id="1",
+    #     number=1,
+    #     category="Car",
+    #     position={"x":0,"y":0,"z":0},
+    #     rotation={"x":0,"y":0,"z":0},
+    #     dimension={"x":20,"y":5,"z":1}
+    # ))
+    # print(ldboxpre3.dumps_data())
+
 
