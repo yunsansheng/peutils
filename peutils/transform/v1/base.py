@@ -137,8 +137,8 @@ class ErrorMsgLogV1():
         return json.dumps([{
             "id": e.id,
             "message": e.message,
-            "frames":e.frameList,
-            "block":e.block
+            "frames": e.frameList,
+            "blockSubmit": e.block
         } for e in self.error_list],ensure_ascii=False)
 
 
@@ -221,7 +221,7 @@ categoryColor一般为空不要用，
 '''
 class ImgInstance():
     def __init__(self,id,category,number,categoryName=None,ist_attr=None):
-        # self.frameNum = frameNum  # frameNum用子物体的
+        # self.frameNum = frameNum  # frameNum用子物体的，因为一个实例会存在于连续真的多个数据中
         self.id = id
         self.category = category
         self.categoryName = categoryName

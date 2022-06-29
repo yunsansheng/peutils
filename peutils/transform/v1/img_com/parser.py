@@ -76,7 +76,7 @@ class ImgComParse(CommonBaseMixIn):
                 imageHeight = raw_frame["imageHeight"],
                 isValid= raw_frame["valid"],
                 rotation = raw_frame["rotation"],
-                frame_attr= raw_frame.get("attributes",dict()),
+                frame_attr= DotDict(raw_frame.get("attributes")) if raw_frame.get("attributes") else DotDict(),
                 config=self.config
             )
             frames_lst.append(frame)
@@ -101,7 +101,7 @@ class ImgComParse(CommonBaseMixIn):
                 categoryName = instance["categoryName"],
                 # categoryColor = instance["categoryColor"],
                 number = instance["number"],
-                ist_attr = instance.get("attributes",dict())
+                ist_attr = DotDict(instance.get("attributes")) if instance.get("attributes") else DotDict()
             )
             obj_list = []
             for ch in instance["children"]:
