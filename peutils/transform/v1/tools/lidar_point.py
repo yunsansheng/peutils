@@ -1,13 +1,3 @@
-# -*- coding: UTF-8 -*-
-
-'''
-Author: Henry Wang
-Date: 2022-06-14 17:45
-Short Description:
-
-Change History:
-
-'''
 from peutils.pcd_py3 import PointCloud
 import numpy as np
 
