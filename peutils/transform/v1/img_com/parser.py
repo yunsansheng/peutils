@@ -56,8 +56,12 @@ class ImgComParse(CommonBaseMixIn):
         self.url = url
         self.config = config
         self.raw_data = self.get_raw_data(url) # 获取JSON字典数据数据
-        self.instance_lst, self.object_lst = self.parse_by_instance()
+
+        self.cameras_lst = [x["camera"] for x in self.raw_data["frames"]]  # 所有镜头名称
+
+        self.instance_dict, self.instance_lst, self.object_lst = self.parse_by_instance()
         self.frames_lst, self.frame_length = self.parse_by_frame()
+
 
 
     def check_frames_error(self):
@@ -67,8 +71,12 @@ class ImgComParse(CommonBaseMixIn):
         return all_errors
 
     def parse_by_frame(self):
+        if self.config.camera not in self.cameras_lst:
+            raise Exception(f"{self.config.camera} 不在当前的已有镜头中,{self.cameras_lst}")
+
         frames_lst = []
-        for raw_frame in self.raw_data["frames"][0]["frames"]: # 先解析default cam
+        cam_idx = self.cameras_lst.index(self.config.camera)
+        for raw_frame in self.raw_data["frames"][cam_idx]["frames"]: # 先解析default cam
             frame = ImgComFrame(
                 frameId= raw_frame["frameIndex"],
                 frameUrl= raw_frame["imageUrl"],
@@ -93,6 +101,7 @@ class ImgComParse(CommonBaseMixIn):
     def parse_by_instance(self):
 
         instance_lst = []
+        instance_dict = dict()
         all_obj_lst = []
         for instance in self.raw_data["instances"]:
             ist = ImgInstance(
@@ -105,48 +114,70 @@ class ImgComParse(CommonBaseMixIn):
             )
             obj_list = []
             for ch in instance["children"]:
-                for obj in ch["cameras"][0]["frames"]: # 默认先只处理default cam
-                    imgobj = Img2Dobj(
-                        instance = ist,
-                        frameNum= obj["frameIndex"],
-                        id = ch["id"],
-                        number = ch["number"],
-                        category = ch["name"],
-                        displayName = ch["displayName"],
-                        color = ch["displayColor"],
-                        shapeType = obj["shapeType"],
-                        shape = obj["shape"],
-                        order = obj.get("order"),# 测试None if ch["id"] =="faeb43ff-546b-4f80-b99b-8e4eeb62f112" else obj.get("order"),
-                        img_attr = obj.get("attributes",dict()),
-                        isOCR= obj.get("isOCR",False),
-                        OCRText= obj.get("OCRText","")
-                    )
-                    obj_list.append(imgobj)
+                for camera_obj in ch["cameras"]:
+                    if camera_obj["camera"] == self.config.camera:
+                        for obj in camera_obj["frames"]:
+                            imgobj = Img2Dobj(
+                                instance=ist,
+                                frameNum=obj["frameIndex"],
+                                id=ch["id"],
+                                number=ch["number"],
+                                category=ch["name"],
+                                displayName=ch["displayName"],
+                                color=ch["displayColor"],
+                                shapeType=obj["shapeType"],
+                                shape=obj["shape"],
+                                order=obj.get("order"),
+                                # 测试None if ch["id"] =="faeb43ff-546b-4f80-b99b-8e4eeb62f112" else obj.get("order"),
+                                img_attr=obj.get("attributes", dict()),
+                                isOCR=obj.get("isOCR", False),
+                                OCRText=obj.get("OCRText", "")
+                            )
+                            obj_list.append(imgobj)
+
             # 加到ist实例中
             all_obj_lst.extend(obj_list)
             ist.obj_list.extend(obj_list)
+            ### 最后再加
             instance_lst.append(ist)
+            instance_dict[ist.id] = ist
 
-        return instance_lst,all_obj_lst
+        return instance_dict,instance_lst,all_obj_lst
 
 
 
 class ImgComDataConfig():
-    def __init__(self,parse_id_col="id",number_adpter_func=None,seq_start=0,check_order=True,overflow=False):
+    def __init__(self,parse_id_col="id",number_adpter_func=None,seq_start=0,check_order=True,overflow=False,camera="default"):
         self.number_adpter_func = number_adpter_func
         self.parse_id_col = parse_id_col, # 默认id ## 暂时不引入fid,gid
         self.check_order = check_order # 检查order 是否都存在
         self.seq_start = seq_start  # 暂时用不到
         self.overflow = overflow # 默认不允许超出图像边界
+        self.camera = camera
 
 
 
 if __name__ =="__main__":
-    ## 单帧
+
     from pprint import pprint
-    img = ImgComParse(url="https://oss-prd.appen.com.cn:9001/tool-prod/a2a3ef0c-55c4-4d15-8cc2-ff6aeb7878dd/R.1650783983510.a2a3ef0c-55c4-4d15-8cc2-ff6aeb7878dd.CODU4AEQEg3d3d_2022-04-24T070156Z.18107.result.json",
-                         config =ImgComDataConfig(
-                         ))
+    # ### 单镜头
+    # img = ImgComParse(url="https://oss-prd.appen.com.cn:9001/tool-prod/a2a3ef0c-55c4-4d15-8cc2-ff6aeb7878dd/R.1650783983510.a2a3ef0c-55c4-4d15-8cc2-ff6aeb7878dd.CODU4AEQEg3d3d_2022-04-24T070156Z.18107.result.json",
+    #                      config =ImgComDataConfig(
+    #                      ))
+    # print(img.cameras_lst)
+    # pprint(img.instance_dict)
+
+    ### 多镜头
+    # img = ImgComParse(url="https://oss-prd.appen.com.cn:9001/tool-prod/preview-eqijvSUEhq-kogoQOP_9t/preview-eqijvSUEhq-kogoQOP_9t.video-track-v2_task.video-track-v2_record.result.json",
+    #                      config =ImgComDataConfig(
+    #                          camera="wide" # far or wide
+    #                      ))
+    # print(img.cameras_lst)
+    # pprint(img.instance_dict)
+    # pprint(img.object_lst)
+    # pprint(img.)
+
+
     # print(img.frames_lst[0].frame_items)
 
     # pprint(img.instance_lst)
