@@ -70,26 +70,7 @@ def get_abs_cube_points_list(*args,quaternion, position, dimension):
     # print( np.around(point_arr,6))
     return point_arr
 
-# points8 = get_abs_cube_points_list(
-#         quaternion ={
-#             "x": 0,
-#             "y": 0,
-#             "z": 0.7071067811865476,
-#             "w": -0.7071067811865475
-#           }
-#         ,
-#         position = {
-#             "x": 12.620720042768912,
-#             "y": 3.6885788192013638,
-#             "z": 1
-#           },
-#         dimension = {
-#             "x": 2.5147194754442883,
-#             "y": 5.5304166242425215,
-#             "z": 2
-#           }
-#     )
-# print(points8)
+
 #### 平台的内参是p
 
 
