@@ -68,8 +68,8 @@ def in_convex_polyhedron(points_set: np.ndarray, test_points: np.ndarray,x_range
         # print(test_points[i])
         p = test_points[i]
         if (p[0]< x_range[0] or p[0]>x_range[1]) \
-               and  (p[1]< y_range[0] or p[0]>y_range[1])  \
-               and  (p[2]< z_range[0] or p[0]>z_range[1]) :
+               or  (p[1]< y_range[0] or p[1]>y_range[1])  \
+               or  (p[2]< z_range[0] or p[2]>z_range[1]) :
             bol.append(False)
             continue
 
