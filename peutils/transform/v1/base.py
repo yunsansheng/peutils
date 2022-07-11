@@ -200,6 +200,18 @@ class Lidar3dImageRect():
             self.dimension["x"],self.dimension["y"]
         ]
 
+    def get_dig_points(self):
+        '''
+        对角线点，左上角点和右下角点,2*2 数组
+        '''
+        if self.type !='rectangle':
+            raise Exception("非矩形框请不要使用对角坐标")
+        else:
+            return [
+                [self.position["x"], self.position["y"]],
+                [self.position["x"] + self.dimension["width"], self.position["y"] + self.dimension["height"]]
+            ]
+
     def to_dict(self):
         _data_dict = {
             "type":self.type,
@@ -293,6 +305,31 @@ class Img2Dobj():
         self.img_attr = DotDict(img_attr) if img_attr else DotDict()
         self.isOCR = isOCR
         self.OCRText = OCRText
+
+
+    def get_bbox(self):
+        # xmin ymin w h
+
+        if self.shapeType !='rectangle':
+            raise Exception("非矩形框请不要使用bbox")
+        else:
+            return [
+                self.shape["x"], self.shape["y"],
+                self.shape["width"], self.shape["height"]
+            ]
+
+    def get_dig_points(self):
+        '''
+        对角线点，左上角点和右下角点,2*2 数组
+        '''
+        if self.shapeType !='rectangle':
+            raise Exception("非矩形框请不要使用对角坐标")
+        else:
+            return [
+                [self.shape["x"], self.shape["y"]],
+                [self.shape["x"] + self.shape["width"], self.shape["y"] + self.shape["height"]]
+            ]
+
 
     def __repr__(self):
         return f"F{self.frameNum} {self.id} {self.category} {self.number} {self.shapeType} Order:{self.order} <-[{self.instance.category}]"
