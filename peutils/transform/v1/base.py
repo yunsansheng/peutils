@@ -176,9 +176,14 @@ class Lidar3dObj():
         return _data_dict
 
 
+
 class Lidar3dImageRect():
     def __init__(self, frameNum, id, number,type, category, position, dimension,imageNum=None,
-                 img_attr=None):
+                 img_attr=None,points=None,rect1=None,rect2=None):
+        '''
+        VANISH_CUBE 灭点立体框才有points
+        RECT_CUBE: 前后矩形框组成的立体框 只有这个才有rect1,rect2
+        '''
         self.frameNum = frameNum
         self.imageNum = imageNum # 图像的次序。从0开始
         self.id = id
@@ -189,6 +194,10 @@ class Lidar3dImageRect():
         self.dimension = DotDict(dimension)
 
         self.img_attr = DotDict(img_attr) if img_attr else DotDict()  # 属性
+
+        self.points = points
+        self.rect1 = rect1
+        self.rect2 = rect2
 
         self.bbox =self.get_bbox()
 
@@ -222,10 +231,23 @@ class Lidar3dImageRect():
             "dimension":self.dimension,
             "labels":"" if self.img_attr else json.dumps(self.img_attr,ensure_ascii=False),
         }
+        if self.type =="VANISH_CUBE":
+            if self.points is None:
+                raise Exception("灭点必须提供points")
+            _data_dict["points"] = self.points
+
+        if self.type =="RECT_CUBE":
+            if self.rect1 is None or self.rect2 is None:
+                raise Exception("RECT_CUBE 必须提供rect1和rect2")
+            _data_dict["rect1"] = self.rect1
+            _data_dict["rect2"] = self.rect2
+
         return _data_dict
 
     def __repr__(self):
         return f"{self.id} {self.category} {self.number} {self.imageNum}"
+
+
 
 
 '''

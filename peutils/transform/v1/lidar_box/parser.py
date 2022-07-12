@@ -124,7 +124,19 @@ class LidarBoxFrame():
         1.图像是否超出边界外
 
         '''
-        if item["type"] =="RECT":
+        if item["type"] in {"RECT","VANISH_CUBE","RECT_CUBE"}:
+            points = None
+            rect1 = None
+            rect2 = None
+
+            if item["type"] =="VANISH_CUBE":
+                points = item["points"]
+
+            if item["type"] =="RECT_CUBE":
+                rect1 = item["rect1"]
+                rect2 = item["rect2"]
+
+
             img_obj = Lidar3dImageRect(
                 frameNum= self.frameId, #item["frameNum"],
                 imageNum=item["imageNum"],
@@ -135,7 +147,11 @@ class LidarBoxFrame():
                 position=position,
                 dimension=dimension,
                 img_attr=json.loads(item["labels"]) if item.get("labels") else dict(),
+                points = points,
+                rect1 = rect1,
+                rect2 = rect2
             )
+
         else:
             # 暂时不会遇到
             img_obj =None
@@ -173,11 +189,11 @@ class LidarBoxFrame():
         single_image_dict = dict()
 
         for item in items:
-            if item["type"] =="RECT":
+            if item["type"] in {"RECT","VANISH_CUBE","RECT_CUBE"}:
                 key,img_obj = self.parse_img_by_item(item,width,height)
                 single_image_dict[key] = img_obj
             else:
-                raise Exception("目前图像物体仅支持RECT,其他类型还在开发中")
+                raise Exception("目前图像物体仅支持RECT VANISH_CUBE RECT_CUBE,其他类型还在开发中")
 
         if len(items) != len(single_image_dict):
             raise Exception(f"{self.config.parse_id_col} 解析模式下数量不等，请检查使用参数")
