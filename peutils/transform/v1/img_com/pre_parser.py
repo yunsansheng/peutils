@@ -12,12 +12,12 @@ Change History:
   "instances": [
     {
       "id": "xxx", // 唯一编号勿重复
-      "category": "CAR", // 请对应模板配置
+      "category": "CAR", // 请对应模板配置中唯一值
       "number": 1, // 同一category下勿重复
       "children": [
         {
           "id": "yyy", // 唯一编号勿重复
-          "name": "车身", // 请对应模板配置
+          "name": "车身", // 对应模版中的唯一标识
           "number": 1, // 同一instance，同一name下勿重复
           "cameras": [
             {
