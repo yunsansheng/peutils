@@ -37,7 +37,7 @@ Change History:
 			"labels": "...json字符串..."
 		}],
 		"images": [
-			[{
+			{
 				"items": [{
 					"type": "RECT",
 					"id": "669b1f5a-8eeb-40fe-8945-2dd8cec688a1",
@@ -55,7 +55,7 @@ Change History:
 
 				}]
 			}]
-		]
+
 
 	}]
 
