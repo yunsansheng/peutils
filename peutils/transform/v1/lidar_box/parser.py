@@ -267,7 +267,10 @@ class LidarBoxParse(CommonBaseMixIn):
             ### 属性
             attribute = raw_frame.get("attribute")
             if attribute:
-                frame_attr = DotDict(json.loads(attribute))
+                if isinstance(attribute,dict):
+                    frame_attr = DotDict(attribute)
+                else:
+                    frame_attr = DotDict(json.loads(attribute))
             else:
                 frame_attr = DotDict()
 
