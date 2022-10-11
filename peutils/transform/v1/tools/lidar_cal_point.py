@@ -75,7 +75,6 @@ def in_convex_polyhedron(points_set: np.ndarray, test_points: np.ndarray,x_range
 输出
 所有在这个框内的数据的index
 '''
-@deco_execution_time
 def get_idx_in_convex_polyhedron(test_points: np.ndarray, position, dimension, quaternion):
     """
     检测点是否在凸包内
