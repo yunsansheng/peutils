@@ -292,14 +292,21 @@ class ImgInstance():
                     }]
                 }
             ## 添加这条数据到frames信息中
-            child_dict[child_id]["cameras"][0]["frames"].append({
+            pre_item = {
                 "frameIndex": item.frameNum,
                 "isKeyFrame": True,
                 "shapeType": item.shapeType,
                 "shape": item.shape,
                 "order": item.order,
-                "attributes": item.img_attr
-            })
+                "attributes": item.img_attr,
+            }
+            if item.isOCR is not None:
+                pre_item["isOCR"] = item.isOCR
+            if item.OCRText is not None:
+                pre_item["OCRText"] = item.OCRText
+
+
+            child_dict[child_id]["cameras"][0]["frames"].append(pre_item)
         for _,v in child_dict.items():
             _pre_data_dict["children"].append(v)
         return  _pre_data_dict
