@@ -75,7 +75,7 @@ class ErrorUnit():
         self.category = category
         self.number = number
         self.frameList = self.get_frameList(frameNum)
-        self.bock = block
+        self.block = block
 
     def get_frameList(self,frameNum):
         if frameNum is None:
