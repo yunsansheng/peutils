@@ -230,7 +230,7 @@ class LidarBoxFrame():
         if polygon_count != len(polygon_dict):
             raise Exception(f"{self.config.parse_id_col} 解析模式下polygon数量不等，请检查使用参数")
 
-        return lidar_dict,polygon_dict
+        return lidar_dict, polygon_dict
 
     def get_single_image_dict(self, items, width, height, img_idx):
         single_image_dict = dict()
@@ -262,8 +262,14 @@ class LidarBoxFrame():
                 image_path = img.get("image")
                 imageUrlInternal = img.get("imageUrlInternal")
                 imageUrlExternal = img.get("imageUrlExternal")
-                camera_name = str(idx)
+                if img.get("image"):
+                    image_path = img["image"]
+                    camera_name = image_path.split("/")[-2]
+                else:
+                    image_path = None
+                    camera_name = str(idx)
                 camera_list.append(camera_name)
+
             else:
                 width = img["width"]
                 height = img["height"]
