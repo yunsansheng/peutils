@@ -145,8 +145,8 @@ class ErrorMsgLogV1():
 
 
 class Lidar3dObj():
-    def __init__(self, frameNum, id, number, category, position, rotation, dimension,
-                 lidar_attr=None, quaternion=None,pointCount=None):
+    def __init__(self, frameNum, id, number, category, position=None, rotation=None, dimension=None,
+                 lidar_attr=None, quaternion=None,pointCount=None,vertices=None,type=None):
         self.frameNum = frameNum
         self.id = id
         self.number = number
@@ -158,6 +158,8 @@ class Lidar3dObj():
         self.lidar_attr = DotDict(lidar_attr) if lidar_attr else DotDict() # 属性
         self.quaternion = DotDict(quaternion) if quaternion else DotDict()
         self.pointCount = pointCount
+        self.vertices = vertices
+        self.type = type
 
     def __repr__(self):
         return f"{self.id} {self.category} {self.number}"
@@ -192,6 +194,7 @@ class Lidar3dImageRect():
         self.category = category
         self.position = DotDict(position)
         self.dimension = DotDict(dimension)
+
 
         self.img_attr = DotDict(img_attr) if img_attr else DotDict()  # 属性
 
