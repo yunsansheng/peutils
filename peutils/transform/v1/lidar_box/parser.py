@@ -134,7 +134,7 @@ class LidarBoxFrame():
 
         return key, lidar_obj
 
-    def parse_img_by_item(self, item, width, height):
+    def parse_img_by_item(self, item, width, height,img_idx):
 
         position = dict_adapter(item["position"], out_adapter=self.config.number_adpter_func)
         dimension = dict_adapter(item["dimension"], out_adapter=self.config.number_adpter_func)
@@ -158,7 +158,7 @@ class LidarBoxFrame():
 
             img_obj = Lidar3dImageRect(
                 frameNum=self.frameId,  # item["frameNum"],
-                imageNum=item["imageNum"],
+                imageNum=img_idx, #item["imageNum"],
                 id=item["id"],
                 number=item["number"],
                 type=item["type"],
@@ -203,12 +203,12 @@ class LidarBoxFrame():
             raise Exception(f"{self.config.parse_id_col} 解析模式下数量不等，请检查使用参数")
         return lidar_dict
 
-    def get_single_image_dict(self, items, width, height):
+    def get_single_image_dict(self, items, width, height,img_idx):
         single_image_dict = dict()
 
         for item in items:
             if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE"}:
-                key, img_obj = self.parse_img_by_item(item, width, height)
+                key, img_obj = self.parse_img_by_item(item, width, height,img_idx)
                 single_image_dict[key] = img_obj
             else:
                 raise Exception("目前图像物体仅支持RECT VANISH_CUBE RECT_CUBE,其他类型还在开发中")
@@ -253,7 +253,7 @@ class LidarBoxFrame():
                 "height": height,
 
             }
-            sg_img_dict = self.get_single_image_dict(img["items"], width=width, height=height)
+            sg_img_dict = self.get_single_image_dict(img["items"], width=width, height=height,img_idx=idx)
             images_dict[camera_name] = sg_img_dict
             images_list.append(sg_img_dict)
 
