@@ -33,7 +33,7 @@ class LidarBoxFrame():
             self.config.seq_func = gen_uuid_seq(start=self.config.seq_start)
 
         self.frame_attr = frame_attr
-        self.lidar_dict = self.get_lidar_dict(items)
+        self.lidar_dict, self.polygon_dict = self.get_lidar_dict(items)
         self.camera_list, self.camera_meta, self.images_dict, self.images_list = self.get_images_dict(images)
         self._img_idset = self.get_img_idset(self.images_dict)
         self.only_lidar_idset = self.lidar_dict.keys() - self._img_idset  # 只有3D 没有出现在2D的ID
@@ -66,54 +66,37 @@ class LidarBoxFrame():
         2.如果has_pointCount是True,检查pointCount 不是None
         '''
 
-        # 3D分为两类
-        box_type = item.get("type")
-        if box_type is None or box_type =="cube":
+        rotation = dict_adapter(item["rotation"], out_adapter=self.config.number_adpter_func)
+        position = dict_adapter(item["position"], out_adapter=self.config.number_adpter_func)
+        dimension = dict_adapter(item["dimension"], out_adapter=self.config.number_adpter_func)
+        ## 四元数
+        quaternion = dict_adapter(item["quaternion"], out_adapter=self.config.number_adpter_func)
 
-            rotation = dict_adapter(item["rotation"], out_adapter=self.config.number_adpter_func)
-            position = dict_adapter(item["position"], out_adapter=self.config.number_adpter_func)
-            dimension = dict_adapter(item["dimension"], out_adapter=self.config.number_adpter_func)
-            ## 四元数
-            quaternion = dict_adapter(item["quaternion"], out_adapter=self.config.number_adpter_func)
-
-            ### 解析点云数量
-            if item.get("pointCount"):
-                if item.get("pointCount").get("lidar") is not None:
-                    pointCount = item["pointCount"]["lidar"]
-                elif item.get("pointCount").get("ldiar"):
-                    pointCount = item["pointCount"]["ldiar"]
-                else:
-                    raise Exception("没有找到lidar 或者ldiar字段")
-
+        ### 解析点云数量
+        if item.get("pointCount"):
+            if item.get("pointCount").get("lidar") is not None:
+                pointCount = item["pointCount"]["lidar"]
+            elif item.get("pointCount").get("ldiar"):
+                pointCount = item["pointCount"]["ldiar"]
             else:
-                pointCount = None
+                raise Exception("没有找到lidar 或者ldiar字段")
 
-            lidar_obj = Lidar3dObj(
-                frameNum=self.frameId,  # item["frameNum"],
-                id=item["id"],
-                number=item["number"],
-                category=item["category"],
-                position=position,
-                rotation=rotation,
-                dimension=dimension,
-                quaternion=quaternion,
-                lidar_attr=json.loads(item["labels"]) if item.get("labels") else dict(),
-                pointCount=pointCount,
-                type = "cube"
-            )
-        elif box_type =="polygon":
-            lidar_obj = Lidar3dObj(
-                frameNum=self.frameId,  # item["frameNum"],
-                id=item["id"],
-                number=item["number"],
-                category=item["category"],
-                lidar_attr=json.loads(item["labels"]) if item.get("labels") else dict(),
-                vertices=item.get("vertices"),
-                type = box_type
-            )
         else:
-            raise Exception("未知的3D类型",box_type)
+            pointCount = None
 
+        lidar_obj = Lidar3dObj(
+            frameNum=self.frameId,  # item["frameNum"],
+            id=item["id"],
+            number=item["number"],
+            category=item["category"],
+            position=position,
+            rotation=rotation,
+            dimension=dimension,
+            quaternion=quaternion,
+            lidar_attr=json.loads(item["labels"]) if item.get("labels") else dict(),
+            pointCount=pointCount,
+            type="cube"
+        )
 
         if self.config.parse_id_col == "id":
             key = item["id"]
@@ -134,7 +117,38 @@ class LidarBoxFrame():
 
         return key, lidar_obj
 
-    def parse_img_by_item(self, item, width, height,img_idx):
+    def parse_polygon_by_item(self, item):
+
+        '''
+        检查逻辑
+        1.如果yaw_only True,检查 rotation x 和 y都是0
+        2.如果has_pointCount是True,检查pointCount 不是None
+        '''
+
+        # 3D分为两类
+
+        polygon_obj = Lidar3dPolygonObj(
+            frameNum=self.frameId,  # item["frameNum"],
+            id=item["id"],
+            number=item["number"],
+            category=item["category"],
+            lidar_attr=json.loads(item["labels"]) if item.get("labels") else dict(),
+            vertices=item.get("vertices"),
+            type="polygon"
+        )
+
+        if self.config.parse_id_col == "id":
+            key = item["id"]
+        elif self.config.parse_id_col == "number":
+            key = item["number"]
+        elif self.config.parse_id_col in ("gid", "fid"):
+            key = self.config.seq_func(item["id"])
+        else:
+            raise Exception("parse_id_col解析模式错误")
+
+        return key, polygon_obj
+
+    def parse_img_by_item(self, item, width, height, img_idx):
 
         position = dict_adapter(item["position"], out_adapter=self.config.number_adpter_func)
         dimension = dict_adapter(item["dimension"], out_adapter=self.config.number_adpter_func)
@@ -158,7 +172,7 @@ class LidarBoxFrame():
 
             img_obj = Lidar3dImageRect(
                 frameNum=self.frameId,  # item["frameNum"],
-                imageNum=img_idx, #item["imageNum"],
+                imageNum=img_idx,  # item["imageNum"],
                 id=item["id"],
                 number=item["number"],
                 type=item["type"],
@@ -194,21 +208,36 @@ class LidarBoxFrame():
 
     def get_lidar_dict(self, items):
         lidar_dict = dict()
+        polygon_dict = dict()
+        lidar_count = 0
+        polygon_count = 0
 
         for item in items:
-            key, lidar_obj = self.parse_lidar_by_item(item=item)
-            lidar_dict[key] = lidar_obj
+            box_type = item.get("type")
+            if box_type is None or box_type == "cube":
+                key, lidar_obj = self.parse_lidar_by_item(item=item)
+                lidar_dict[key] = lidar_obj
+                lidar_count += 1
+            elif box_type == "polygon":
+                key, polygon_obj = self.parse_polygon_by_item(item=item)
+                polygon_dict[key] = polygon_obj
+                polygon_count += 1
+            else:
+                raise Exception("未知的3D类型", box_type)
 
-        if len(items) != len(lidar_dict):
-            raise Exception(f"{self.config.parse_id_col} 解析模式下数量不等，请检查使用参数")
-        return lidar_dict
+        if lidar_count != len(lidar_dict):
+            raise Exception(f"{self.config.parse_id_col} 解析模式下lidar数量不等，请检查使用参数")
+        if polygon_count != len(polygon_dict):
+            raise Exception(f"{self.config.parse_id_col} 解析模式下polygon数量不等，请检查使用参数")
 
-    def get_single_image_dict(self, items, width, height,img_idx):
+        return lidar_dict,polygon_dict
+
+    def get_single_image_dict(self, items, width, height, img_idx):
         single_image_dict = dict()
 
         for item in items:
             if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE"}:
-                key, img_obj = self.parse_img_by_item(item, width, height,img_idx)
+                key, img_obj = self.parse_img_by_item(item, width, height, img_idx)
                 single_image_dict[key] = img_obj
             else:
                 raise Exception("目前图像物体仅支持RECT VANISH_CUBE RECT_CUBE,其他类型还在开发中")
@@ -253,7 +282,7 @@ class LidarBoxFrame():
                 "height": height,
 
             }
-            sg_img_dict = self.get_single_image_dict(img["items"], width=width, height=height,img_idx=idx)
+            sg_img_dict = self.get_single_image_dict(img["items"], width=width, height=height, img_idx=idx)
             images_dict[camera_name] = sg_img_dict
             images_list.append(sg_img_dict)
 
