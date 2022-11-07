@@ -352,18 +352,34 @@ class LidarBoxParse(CommonBaseMixIn):
             else:
                 isValid = raw_frame["isValid"]
 
-            frame = LidarBoxFrame(
-                frameId=raw_frame["frameId"],
-                frameUrl=raw_frame["frameUrl"],
-                isValid=isValid,
-                frameUrlInternal=raw_frame["frameUrlInternal"],
-                frameUrlExternal=raw_frame["frameUrlExternal"],
-                frame_attr=frame_attr,
-                items=raw_frame["items"],
-                images=raw_frame["images"],
-                config=self.config
-            )
+            mod2 = (idx+1) % 2
+            if (self.config.filter_frame =='even' and mod2 == 1) or (self.config.filter_frame =='odd' and mod2 == 0):
+                # 偶数的时候忽略奇数帧 奇数的时候忽略偶数帧
+                frame = LidarBoxFrame(
+                    frameId= raw_frame["frameId"],
+                    frameUrl= raw_frame["frameUrl"],
+                    isValid= raw_frame.get("isValid"),
+                    frameUrlInternal=raw_frame["frameUrlInternal"],
+                    frameUrlExternal=raw_frame["frameUrlExternal"],
+                    frame_attr=frame_attr,
+                    items=[],
+                    images=[],
+                    config=self.config
+                )
+            else:
+                frame = LidarBoxFrame(
+                    frameId=raw_frame["frameId"],
+                    frameUrl=raw_frame["frameUrl"],
+                    isValid=isValid,
+                    frameUrlInternal=raw_frame["frameUrlInternal"],
+                    frameUrlExternal=raw_frame["frameUrlExternal"],
+                    frame_attr=frame_attr,
+                    items=raw_frame["items"],
+                    images=raw_frame["images"],
+                    config=self.config
+                )
             frames_lst.append(frame)
+
         return frames_lst, len(frames_lst)
 
 
