@@ -327,16 +327,6 @@ class LidarBoxParse(CommonBaseMixIn):
         #
         frames_lst = []
         for idx,raw_frame in enumerate(self.raw_data["frames"]):
-
-            mod2 = (idx+1) % 2
-            if self.config.filter_frame =='even' and mod2 == 1:
-                # 偶数的时候忽略奇数帧
-                continue
-
-            if self.config.filter_frame =='odd' and mod2 == 0:
-                # 奇数的时候忽略偶数帧
-                continue
-
             ### 属性
             attribute = raw_frame.get("attribute")
             if attribute:
