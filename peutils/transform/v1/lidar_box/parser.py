@@ -326,7 +326,16 @@ class LidarBoxParse(CommonBaseMixIn):
         '''
         #
         frames_lst = []
-        for raw_frame in self.raw_data["frames"]:
+        for idx,raw_frame in enumerate(self.raw_data["frames"]):
+
+            mod2 = (idx+1) % 2
+            if self.config.filter_frame =='even' and mod2 == 1:
+                # 偶数的时候忽略奇数帧
+                continue
+
+            if self.config.filter_frame =='odd' and mod2 == 0:
+                # 奇数的时候忽略偶数帧
+                continue
 
             ### 属性
             attribute = raw_frame.get("attribute")
@@ -360,8 +369,11 @@ class LidarBoxParse(CommonBaseMixIn):
 
 class LidarBoxDataConfig():
     def __init__(self, yaw_only=True, has_pointCount=True, number_adpter_func=None,
-                 parse_id_col="id", seq_start=0, overflow=False, has_ignore_frame=False):
+                 parse_id_col="id", seq_start=0, overflow=False, has_ignore_frame=False,
+                 filter_frame=None
+                 ):
         # has_ignore_frame 如果是True的时候，那么图片的宽高和和isvalid可以为空
+        # filter_frame 默认None odd 奇数 even 偶数
         self.yaw_only = yaw_only
         self.has_pointCount = has_pointCount
         self.number_adpter_func = number_adpter_func
@@ -369,6 +381,7 @@ class LidarBoxDataConfig():
         self.seq_start = seq_start
         self.overflow = overflow  # 默认不允许超出图像边界
         self.has_ignore_frame = has_ignore_frame
+        self.filter_frame = filter_frame
 
 
 from pprint import pprint
