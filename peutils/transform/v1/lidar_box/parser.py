@@ -342,9 +342,13 @@ class LidarBoxParse(CommonBaseMixIn):
             else:
                 isValid = raw_frame["isValid"]
 
+            if self.config.filter_frame and self.config.key_frames:
+                raise Exception("filter_frame和key_frames不能同时配置")
+
             mod2 = (idx+1) % 2
-            if (self.config.filter_frame =='even' and mod2 == 1) or (self.config.filter_frame =='odd' and mod2 == 0):
+            if (self.config.filter_frame =='even' and mod2 == 1) or (self.config.filter_frame =='odd' and mod2 == 0) or (self.config.key_frames and raw_frame["frameId"] not in self.config.key_frames):
                 # 偶数的时候忽略奇数帧 奇数的时候忽略偶数帧
+                # 忽略非关键帧
                 frame = LidarBoxFrame(
                     frameId= raw_frame["frameId"],
                     frameUrl= raw_frame["frameUrl"],
@@ -376,10 +380,11 @@ class LidarBoxParse(CommonBaseMixIn):
 class LidarBoxDataConfig():
     def __init__(self, yaw_only=True, has_pointCount=True, number_adpter_func=None,
                  parse_id_col="id", seq_start=0, overflow=False, has_ignore_frame=False,
-                 filter_frame=None
+                 filter_frame=None, key_frames=None
                  ):
         # has_ignore_frame 如果是True的时候，那么图片的宽高和和isvalid可以为空
         # filter_frame 默认None odd 奇数 even 偶数
+        # key_frames 默认None 需要解析的关键帧
         self.yaw_only = yaw_only
         self.has_pointCount = has_pointCount
         self.number_adpter_func = number_adpter_func
@@ -388,6 +393,7 @@ class LidarBoxDataConfig():
         self.overflow = overflow  # 默认不允许超出图像边界
         self.has_ignore_frame = has_ignore_frame
         self.filter_frame = filter_frame
+        self.key_frames = key_frames
 
 
 from pprint import pprint
