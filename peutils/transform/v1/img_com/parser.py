@@ -29,12 +29,20 @@ class ImgComFrame():
         self.config = config
         self.frame_attr = frame_attr
         self.frame_items = []
-
+        self.frame_dict = dict()
 
     def add_frame_obj(self,obj:Img2Dobj):
         if obj.order is None:
             self.log.create_error("order检查模式下不能缺失",obj=obj)
         self.frame_items.append(obj)
+
+        if self.config.parse_id_col == 'id':
+            self.frame_dict[obj.id] = obj
+        elif self.config.parse_id_col == "number":
+            self.frame_dict[obj.number] = obj
+        else:
+            raise Exception(f"parse_id_col not defined: {self.config.parse_id_col}")
+
 
     # def to_pre_dict(self):
     #     _pre_dict = {
@@ -91,6 +99,11 @@ class ImgComParse(CommonBaseMixIn):
 
         for obj in self.object_lst:
             frames_lst[obj.frameNum].add_frame_obj(obj)
+
+        # 对frame增加相关的obj,并且进行解析数量的检查
+        for f in frames_lst:
+            if len(f.frame_items) != len(f.frame_dict):
+                f.log.create_error(f"{self.config.parse_id_col}解析模式下发现数量不等,请检查")
 
         ### 对order进行检查并且排序数据,缺失的数据排在最前面.
         for f in frames_lst:
@@ -149,7 +162,7 @@ class ImgComParse(CommonBaseMixIn):
 class ImgComDataConfig():
     def __init__(self,parse_id_col="id",number_adpter_func=None,seq_start=0,check_order=True,overflow=False,camera="default"):
         self.number_adpter_func = number_adpter_func
-        self.parse_id_col = parse_id_col, # 默认id ## 暂时不引入fid,gid
+        self.parse_id_col = parse_id_col  # 默认id ## 暂时不引入fid,gid
         self.check_order = check_order # 检查order 是否都存在
         self.seq_start = seq_start  # 暂时用不到
         self.overflow = overflow # 默认不允许超出图像边界
@@ -166,6 +179,8 @@ if __name__ =="__main__":
     #                      ))
     # print(img.cameras_lst)
     # pprint(img.instance_dict)
+    # print(img.frames_lst[0].frame_dict,len(img.frames_lst[0].frame_dict))
+    # print(img.frames_lst[0].frame_items,len(img.frames_lst[0].frame_dict))
 
     ### 多镜头
     # img = ImgComParse(url="https://oss-prd.appen.com.cn:9001/tool-prod/preview-eqijvSUEhq-kogoQOP_9t/preview-eqijvSUEhq-kogoQOP_9t.video-track-v2_task.video-track-v2_record.result.json",
