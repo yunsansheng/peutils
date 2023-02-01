@@ -36,6 +36,7 @@ import zipfile
 import sys
 import os
 from .fileutil import list_files_deep
+from pathlib import Path
 
 
 '''
@@ -87,11 +88,13 @@ class WooeyBaseZipHandlerFile():
     }
     ##
     '''
-    def __init__(self,project_desc,need_process_suffix,process_func,other_params=None):
+    def __init__(self,project_desc,need_process_suffix,process_func,other_params=None,chinese_filename_transcoding=False,chinese_filename_target_encoding_format='gbk'):
         self.project_desc=project_desc
         self.need_process_suffix = need_process_suffix
         self.process_func = process_func
         self.other_params = other_params
+        self.chinese_filename_transcoding=chinese_filename_transcoding
+        self.chinese_filename_target_encoding_format=chinese_filename_target_encoding_format
 
     def main(self):
         parser = ArgumentParser(description=self.project_desc)
@@ -125,6 +128,18 @@ class WooeyBaseZipHandlerFile():
             # 解压完成后，读取文件
             files = list_files_deep(dir_name, suffix=self.need_process_suffix)
             print(f"发现待处理文件{len(files)}")
+
+            if self.chinese_filename_transcoding:
+                for f in files:
+                    try:
+                        f_name=os.path.basename(f)
+                        f_dirname=os.path.dirname(f)
+                        f_path=Path(f)
+                        f_path.rename(os.path.join(f_dirname, f_name.encode('cp437').decode(self.chinese_filename_target_encoding_format)))
+                    except Exception as e:
+                        print(f'文件名<{os.path.basename(f)}>转码失败，跳过')
+                        continue
+
 
             for file in files:
                 print(f"process file {file}")
