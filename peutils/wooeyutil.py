@@ -137,8 +137,12 @@ class WooeyBaseZipHandlerFile():
                         f_path=Path(f)
                         f_path.rename(os.path.join(f_dirname, f_name.encode('cp437').decode(self.chinese_filename_target_encoding_format)))
                     except Exception as e:
+                        print('-' * 30)
                         print(f'文件名<{os.path.basename(f)}>转码失败，跳过')
+                        print(e)
+                        print('-' * 30)
                         continue
+                files = list_files_deep(dir_name, suffix=self.need_process_suffix)
 
 
             for file in files:
