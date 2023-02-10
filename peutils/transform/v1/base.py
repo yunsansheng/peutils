@@ -14,18 +14,19 @@ from requests.adapters import HTTPAdapter
 import inspect
 import json
 from peutils.textutil import gen_uuid
-from typing import Dict, List,Union
+from typing import Dict, List, Union
 
 
 class DotDict(dict):
-    def __init__(self,*args,**kwargs):
-        super(DotDict, self).__init__(*args,**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(DotDict, self).__init__(*args, **kwargs)
 
     def __getattr__(self, key):
         value = self[key]
-        if isinstance(value,dict):
+        if isinstance(value, dict):
             value = DotDict(value)
         return value
+
 
 # print(json.dumps(DotDict()))
 # print(json.dumps(a))
@@ -43,15 +44,16 @@ def get_session(retry=3):
 
     return session
 
+
 # print(inspect.isbuiltin(int))
 
-def dict_adapter(d:dict,out_adapter=None, rename:dict=None):
+def dict_adapter(d: dict, out_adapter=None, rename: dict = None):
     d = {k: v for k, v in d.items()}
     if out_adapter is not None:
         if inspect.isfunction(out_adapter):
-            for k,v in d.items():
+            for k, v in d.items():
                 d[k] = out_adapter(v)
-        elif isinstance(out_adapter,dict):
+        elif isinstance(out_adapter, dict):
             for key, out_func in out_adapter.items():
                 d[key] = out_func(d[key])
         else:
@@ -69,84 +71,123 @@ def dict_adapter(d:dict,out_adapter=None, rename:dict=None):
 ### 不兼容老的Plss模版，只兼容新的模版.
 ### 都存在的 id, msg, category(可选). number(可选). frameNum(可选，如果单帧就是0)
 class ErrorUnit():
-    def __init__(self,id,message,category=None,number=None,frameNum:Union[List[int],int,None]=None,block=True):
+    def __init__(self, id, message, info=None, category=None, number=None, frameNum: Union[List[int], int, None] = None,
+                 block=True):
         self.id = id
         self.message = message
         self.category = category
         self.number = number
         self.frameList = self.get_frameList(frameNum)
         self.block = block
+        self.info = info
 
-    def get_frameList(self,frameNum):
+    def get_frameList(self, frameNum):
         if frameNum is None:
             return [0]
-        elif isinstance(frameNum,int):
+        elif isinstance(frameNum, int):
             return [frameNum]
-        elif isinstance(frameNum,list):
+        elif isinstance(frameNum, list):
             return list(frameNum)
         else:
             raise Exception(f"不正确的frameNum定义 {frameNum}")
 
     def __repr__(self):
-        if self.frameList !=[0]:
-            err_str = f"帧:{[x+1 for x in self.frameList]} ID:{self.id} Message:{self.message} "
+        if self.frameList != [0]:
+            err_str = f"帧:{[x + 1 for x in self.frameList]} ID:{self.id} Message:{self.message} "
         else:
             err_str = f"ID:{self.id} Message:{self.message} "
 
-        if self.category!="":
+        if self.category != "":
             err_str += f"物体:{self.category} {self.number}"
 
         return err_str
 
+
 '''
 平台错误的格式
+
+图像类的定位提示比较特殊，是通过info来进行定位和提示
+info={
+    "instanceId": obj.instance.id,
+    "instanceItemId": obj.id,
+    "type": rle['type'] if rle else "",
+    "pixels": rle['pixels'] if rle else ""
+},
+
+可以只提示 instanceId
+也可以定位到某个物体 instanceItemId
+type和 pixels 
+- 支持 highlight, pixels 提供rle格式
+
 '''
+
 
 class ErrorMsgLogV1():
 
     def __init__(self):
         self.error_list = []
 
-    def create_error(self,msg,obj=None,frameNum:Union[List[int],int,None]=None,block=True):
+    def create_error(self, msg, obj=None, info=None, frameNum: Union[List[int], int, None] = None, block=True):
+
+        # 当是obj图像的实例时候，如果指定了info，那么根据info来显示，如果 没有指定当给定obj的时候默认
+        # 如果给了指定的
+
+        if obj is not None and info is not None:
+            raise Exception("开发错误:创建错误记录时，参数不能同时提供obj和info")
+
         if obj is None:
             self.error_list.append(ErrorUnit(
-                id = "common-" + gen_uuid(),
-                message= msg,
+                id="common-" + gen_uuid(),
+                message=msg,
                 category="",
                 number="",
                 frameNum=frameNum,
+                info=info,
                 block=block
             ))
         else:
+            if isinstance(obj, Img2Dobj):
+                # 如果存在则覆盖
+                if info is None:
+                    info = {
+                        "instanceId": obj.instance.id,
+                        "instanceItemId": obj.id
+                    }
+                # 提供的话 就不覆盖
             self.error_list.append(ErrorUnit(
-                id = obj.id,
-                message = msg,
-                category = obj.category,
-                number = obj.number,
+                id=obj.id,
+                message=msg,
+                category=obj.category,
+                number=obj.number,
                 frameNum=obj.frameNum,
+                info=info,
                 block=block
             ))
 
-
-    def fomart_error_str(self)->str:
+    def fomart_error_str(self) -> str:
         return "\n".join([repr(e) for e in self.error_list])
         # 如果frame是0，不打印。
 
-    def format_a9_error_str(self)->str:
+    def format_a9_error_str(self) -> str:
         # 平台只接受id,message,frames,block四个属性。
-        return json.dumps([{
-            "id": e.id,
-            "message": e.message,
-            "frames": e.frameList,
-            "blockSubmit": e.block
-        } for e in self.error_list],ensure_ascii=False)
+        err_lst = []
+        for e in self.error_list:
+            eu = {
+                "id": e.id,
+                "message": e.message,
+                "frames": e.frameList,
+                "blockSubmit": e.block
+            }
+            if e.info:
+                eu["info"] = e.info
+            err_lst.append(eu)
 
-
+        return json.dumps(err_lst, ensure_ascii=False)
 
 
 class Lidar3dObj():
     def __init__(self, frameNum, id, number, category, position, rotation, dimension,
-                 lidar_attr=None, quaternion=None,pointCount=None,vertices=None,type=None):
+                 lidar_attr=None, quaternion=None, pointCount=None, vertices=None, type=None):
         self.frameNum = frameNum
         self.id = id
         self.number = number
@@ -155,7 +196,7 @@ class Lidar3dObj():
         self.rotation = DotDict(rotation)
         self.dimension = DotDict(dimension)
 
-        self.lidar_attr = DotDict(lidar_attr) if lidar_attr else DotDict() # 属性
+        self.lidar_attr = DotDict(lidar_attr) if lidar_attr else DotDict()  # 属性
         self.quaternion = DotDict(quaternion) if quaternion else DotDict()
         self.pointCount = pointCount
         self.vertices = vertices
@@ -166,25 +207,25 @@ class Lidar3dObj():
 
     def to_dict(self):
         _data_dict = {
-            "frameNum":self.frameNum,
-            "id":self.id,
-            "number":self.number,
-            "category":self.category,
-            "position":self.position,
-            "rotation":self.rotation,
-            "dimension":self.dimension,
-            "labels":"" if self.lidar_attr else json.dumps(self.lidar_attr,ensure_ascii=False),
+            "frameNum": self.frameNum,
+            "id": self.id,
+            "number": self.number,
+            "category": self.category,
+            "position": self.position,
+            "rotation": self.rotation,
+            "dimension": self.dimension,
+            "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
         }
         return _data_dict
 
 
 class Lidar3dPolygonObj():
-    def __init__(self, frameNum, id, number, category,lidar_attr=None,vertices=None,type=None):
+    def __init__(self, frameNum, id, number, category, lidar_attr=None, vertices=None, type=None):
         self.frameNum = frameNum
         self.id = id
         self.number = number
         self.category = category
-        self.lidar_attr = DotDict(lidar_attr) if lidar_attr else DotDict() # 属性
+        self.lidar_attr = DotDict(lidar_attr) if lidar_attr else DotDict()  # 属性
         self.vertices = vertices
         self.type = type
 
@@ -193,25 +234,25 @@ class Lidar3dPolygonObj():
 
     def to_dict(self):
         _data_dict = {
-            "frameNum":self.frameNum,
-            "id":self.id,
-            "number":self.number,
-            "category":self.category,
-            "vertices":self.vertices,
-            "labels":"" if self.lidar_attr else json.dumps(self.lidar_attr,ensure_ascii=False),
+            "frameNum": self.frameNum,
+            "id": self.id,
+            "number": self.number,
+            "category": self.category,
+            "vertices": self.vertices,
+            "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
         }
         return _data_dict
 
 
 class Lidar3dImageRect():
-    def __init__(self, frameNum, id, number,type, category, position, dimension,imageNum=None,
-                 img_attr=None,points=None,rect1=None,rect2=None):
+    def __init__(self, frameNum, id, number, type, category, position, dimension, imageNum=None,
+                 img_attr=None, points=None, rect1=None, rect2=None):
         '''
         VANISH_CUBE 灭点立体框才有points
         RECT_CUBE: 前后矩形框组成的立体框 只有这个才有rect1,rect2
         '''
         self.frameNum = frameNum
-        self.imageNum = imageNum # 图像的次序。从0开始
+        self.imageNum = imageNum  # 图像的次序。从0开始
         self.id = id
         self.number = number
         self.type = type
@@ -219,28 +260,26 @@ class Lidar3dImageRect():
         self.position = DotDict(position)
         self.dimension = DotDict(dimension)
 
-
         self.img_attr = DotDict(img_attr) if img_attr else DotDict()  # 属性
 
         self.points = points
         self.rect1 = rect1
         self.rect2 = rect2
 
-        self.bbox =self.get_bbox()
-
+        self.bbox = self.get_bbox()
 
     def get_bbox(self):
         # xmin ymin w h
         return [
-            self.position["x"],self.position["y"],
-            self.dimension["x"],self.dimension["y"]
+            self.position["x"], self.position["y"],
+            self.dimension["x"], self.dimension["y"]
         ]
 
     def get_dig_points(self):
         '''
         对角线点，左上角点和右下角点,2*2 数组
         '''
-        if self.type !='rectangle':
+        if self.type != 'rectangle':
             raise Exception("非矩形框请不要使用对角坐标")
         else:
             return [
@@ -250,20 +289,20 @@ class Lidar3dImageRect():
 
     def to_dict(self):
         _data_dict = {
-            "type":self.type,
-            "id":self.id,
-            "number":self.number,
-            "category":self.category,
-            "position":self.position,
-            "dimension":self.dimension,
-            "labels":"" if self.img_attr else json.dumps(self.img_attr,ensure_ascii=False),
+            "type": self.type,
+            "id": self.id,
+            "number": self.number,
+            "category": self.category,
+            "position": self.position,
+            "dimension": self.dimension,
+            "labels": "" if self.img_attr else json.dumps(self.img_attr, ensure_ascii=False),
         }
-        if self.type =="VANISH_CUBE":
+        if self.type == "VANISH_CUBE":
             if self.points is None:
                 raise Exception("灭点必须提供points")
             _data_dict["points"] = self.points
 
-        if self.type =="RECT_CUBE":
+        if self.type == "RECT_CUBE":
             if self.rect1 is None or self.rect2 is None:
                 raise Exception("RECT_CUBE 必须提供rect1和rect2")
             _data_dict["rect1"] = self.rect1
@@ -275,13 +314,13 @@ class Lidar3dImageRect():
         return f"{self.id} {self.category} {self.number} {self.imageNum}"
 
 
-
-
 '''
 categoryColor一般为空不要用，
 '''
+
+
 class ImgInstance():
-    def __init__(self,id,category,number,categoryName=None,ist_attr=None):
+    def __init__(self, id, category, number, categoryName=None, ist_attr=None):
         # self.frameNum = frameNum  # frameNum用子物体的，因为一个实例会存在于连续真的多个数据中
         self.id = id
         self.category = category
@@ -296,11 +335,11 @@ class ImgInstance():
 
     def to_pre_dict(self):
         _pre_data_dict = {
-            "id":self.id,
-            "category":self.category,
+            "id": self.id,
+            "category": self.category,
             "number": self.number,
-            "attributes":self.ist_attr,
-            "children":[
+            "attributes": self.ist_attr,
+            "children": [
             ]
         }
 
@@ -332,21 +371,18 @@ class ImgInstance():
             if item.OCRText is not None:
                 pre_item["OCRText"] = item.OCRText
 
-
             child_dict[child_id]["cameras"][0]["frames"].append(pre_item)
-        for _,v in child_dict.items():
+        for _, v in child_dict.items():
             _pre_data_dict["children"].append(v)
-        return  _pre_data_dict
-
-
+        return _pre_data_dict
 
 
 class Img2Dobj():
-    def __init__(self,instance:ImgInstance,
-                 frameNum,id,number,category,
-                 shapeType,order=None,shape=None,img_attr=None,
+    def __init__(self, instance: ImgInstance,
+                 frameNum, id, number, category,
+                 shapeType, order=None, shape=None, img_attr=None,
                  displayName="", color="",
-                 isOCR=None,OCRText=None
+                 isOCR=None, OCRText=None
                  ):
         self.instance = instance
         self.frameNum = frameNum
@@ -362,11 +398,10 @@ class Img2Dobj():
         self.isOCR = isOCR
         self.OCRText = OCRText
 
-
     def get_bbox(self):
         # xmin ymin w h
 
-        if self.shapeType !='rectangle':
+        if self.shapeType != 'rectangle':
             raise Exception("非矩形框请不要使用bbox")
         else:
             return [
@@ -378,7 +413,7 @@ class Img2Dobj():
         '''
         对角线点，左上角点和右下角点,2*2 数组
         '''
-        if self.shapeType !='rectangle':
+        if self.shapeType != 'rectangle':
             raise Exception("非矩形框请不要使用对角坐标")
         else:
             return [
@@ -386,13 +421,12 @@ class Img2Dobj():
                 [self.shape["x"] + self.shape["width"], self.shape["y"] + self.shape["height"]]
             ]
 
-
     def __repr__(self):
         return f"F{self.frameNum} {self.id} {self.category} {self.number} {self.shapeType} Order:{self.order} <-[{self.instance.category}]"
 
 
 class AudioCutObj():
-    def __init__(self,frameNum,id,number,start,end,block_attr,line_contents,category=""):
+    def __init__(self, frameNum, id, number, start, end, block_attr, line_contents, category=""):
         self.frameNum = frameNum
         self.id = id
         self.number = number
@@ -400,7 +434,7 @@ class AudioCutObj():
         self.start = start
         self.end = end
         self.block_attr = DotDict(block_attr) if block_attr else DotDict()
-        self.line_contents = line_contents # 对应content字段
+        self.line_contents = line_contents  # 对应content字段
 
     def __repr__(self):
         return f"{self.id} {self.category} {self.number} {self.start} {self.end}"
@@ -422,20 +456,22 @@ pointsLabels
 ]
 '''
 
+
 class LidarPointObj():
-    def __init__(self,frameNum ,id,category,number,points,point_attr,pointsLabels,pointCount,type):
+    def __init__(self, frameNum, id, category, number, points, point_attr, pointsLabels, pointCount, type):
         self.frameNum = frameNum
         self.id = id
         self.category = category
         self.number = number
         self.points = points
         self.point_attr = point_attr
-        self.pointsLabels = pointsLabels # 这个是点的 坐标和反射率信息的数组
+        self.pointsLabels = pointsLabels  # 这个是点的 坐标和反射率信息的数组
         self.pointCount = pointCount
         self.type = type  # 平台工具多变形，笔刷，单点，都是point,折线是polyline
 
     def __repr__(self):
         return f"{self.id} {self.category} {self.number} {len(self.points)}P"
+
 
 class LidarPointPolyline():
     def __init__(self, frameNum, imageNum, id, number, type, category, points,
@@ -448,7 +484,6 @@ class LidarPointPolyline():
         self.category = category
         self.points = points
         self.img_attr = img_attr  # 属性
-
 
     def to_dict(self):
         _data_dict = {
@@ -468,31 +503,38 @@ class LidarPointPolyline():
 class CommonBaseMixIn():
     session = get_session(3)
 
-    def get_raw_data(self,url):
-        rs =  self.session.get(url).json()
+    def get_raw_data(self, url):
+        rs = self.session.get(url).json()
         return rs
 
 
 import math
-def gen_format_progress_seq(total,split_part=10):
+
+
+def gen_format_progress_seq(total, split_part=10):
     ###初始化
-    total = total # 总的数量
-    split_part = split_part # 分片数量
-    every_part_num = math.ceil(total/split_part) # 总打印的分片数量
+    total = total  # 总的数量
+    split_part = split_part  # 分片数量
+    every_part_num = math.ceil(total / split_part)  # 总打印的分片数量
 
     finish = 0  # 当前完成的数量
-    finish_part = 0 # 分配开始的进度数量
+    finish_part = 0  # 分配开始的进度数量
+
     # 分片数量，假如 总量是102，分片是10
     def update(step=1):
-        nonlocal finish,finish_part
-        finish += step # 每调用一次 加1
-        if finish//every_part_num >finish_part and finish//every_part_num <=split_part:
-            finish_part+=1 # 分片数量加 1
-            print( "[",("*"*finish_part).ljust(split_part,"_") ,"]" )
+        nonlocal finish, finish_part
+        finish += step  # 每调用一次 加1
+        if finish // every_part_num > finish_part and finish // every_part_num <= split_part:
+            finish_part += 1  # 分片数量加 1
+            print("[", ("*" * finish_part).ljust(split_part, "_"), "]")
         # 根据完成数量update进度
+
     return update
 
+
 import time
+
+
 def deco_execution_time(func):
     def wrapper(*args, **kw):
         t_begin = time.time()
@@ -500,15 +542,16 @@ def deco_execution_time(func):
         t_end = time.time()
 
         if t_end - t_begin < 60:
-            print('%s executed in %s (s)' % (func.__name__, round(t_end - t_begin,2)) )
-        elif t_end -t_begin <3600:
-            print('%s executed in %s (min)' % (func.__name__, round((t_end - t_begin)/60, 2)))
+            print('%s executed in %s (s)' % (func.__name__, round(t_end - t_begin, 2)))
+        elif t_end - t_begin < 3600:
+            print('%s executed in %s (min)' % (func.__name__, round((t_end - t_begin) / 60, 2)))
         else:
-            print('%s executed in %s (h)' % (func.__name__, round((t_end - t_begin) /3600, 2)))
+            print('%s executed in %s (h)' % (func.__name__, round((t_end - t_begin) / 3600, 2)))
 
         return res
 
     return wrapper
+
 
 def remove_key_if_exists(info_dict: dict, rm_list: list):
     for rm_name in rm_list:
