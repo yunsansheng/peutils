@@ -105,19 +105,37 @@ class ErrorUnit():
 
 '''
 平台错误的格式
+1. 音频类项目
+- 目前没有特别的要求，按照规则，需要关联的
 
-图像类的定位提示比较特殊，是通过info来进行定位和提示
+2. 通用图像平台要求
+是通过info来进行定位和提示，框架在提供了obj的情况下会自动构造，增加instanceId和instanceItemId
+图像可以通过覆盖info来达到只提示实例，或者其他像素高量等功能
 info={
-    "instanceId": obj.instance.id,
-    "instanceItemId": obj.id,
-    "type": rle['type'] if rle else "",
-    "pixels": rle['pixels'] if rle else ""
-},
+    "instanceId": obj.instance.id, # 实例的ID 一般需要提供
+    "instanceItemId": obj.id, # 可选 物体的ID
+    "type": "highlight", # 可选，highlight是高亮功能
+    "pixels": RLE # 可选，可以提供RLE格式达到高亮效果
+}
 
-可以只提示 instanceId
-也可以定位到某个物体 instanceItemId
-type和 pixels 
-- 支持 highlight, pixels 提供rle格式
+3. 3D点云拉框
+info={
+    "type":"cube", # 必须 cube 代表3D框，cast 代表图像中的框
+    "id":"uuid"  # 如果是提示点云，提供点云id,如果是图像框就是图像物体的ID
+    "category":"卡车" # 可选，会拼到提示里，最好提供 
+    "number":1   #可选，会拼到提示里，最好提供 对应物体的number，
+    "imageNum":0 # 对应镜头索引，从0开始，如果是cast 类型必须提供
+}
+
+4. 3D点云语义分割
+说是和上面一样，2D中可能有车道线，目前和3D点云拉框一样处理，有具体的项目，到时候再看下
+
+
+
+create_error在使用时
+1. 如果提供obj,那么会产生关联错误，提供定位的功能,如果不提供obj会有一个未关联的错误,有关联性的一定要提供obj
+2. 一般音频检查不需要提供info可以通过id直接定位,图像和3D需要info才能定位，框架在提供了obj的情况下会自动构造，不需要提供额外的info信息。
+3. info信息可以另外提供，提供了info就不能提供，obj 这两者是冲突的，如果自己构造info,务必保证内容和关系的正确性
 
 '''
 
@@ -146,13 +164,29 @@ class ErrorMsgLogV1():
                 block=block
             ))
         else:
-            if isinstance(obj, Img2Dobj):
-                # 如果存在则覆盖
-                if info is None:
+            if info is None:
+                # 2D框自动加内容
+                if isinstance(obj, Img2Dobj):
                     info = {
                         "instanceId": obj.instance.id,
                         "instanceItemId": obj.id
                     }
+                elif isinstance(obj,Lidar3dObj) or isinstance(obj,Lidar3dPolygonObj):
+                    info = {
+                        "type": "cube",
+                        "id":obj.id,
+                        "category":obj.category,
+                        "number":obj.number
+                    }
+                elif isinstance(obj,Lidar3dImageRect) or isinstance(obj,LidarPointPolyline):
+                    info = {
+                        "type":"cast",
+                        "id":obj.id,
+                        "category":obj.category,
+                        "number":obj.number,
+                        "imageNum":obj.imageNum
+                    }
+
                 # 提供的话 就不覆盖
             self.error_list.append(ErrorUnit(
                 id=obj.id,
