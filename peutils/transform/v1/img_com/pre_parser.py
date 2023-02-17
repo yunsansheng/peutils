@@ -82,11 +82,12 @@ class ImgComPre():
         self.imgobj_seq = GenCategorySeq()
         self.frameorder_seq = GenCategorySeq()
 
-    def add_instance_obj(self, p_category, p_attributes=None):
+    def add_instance_obj(self, p_category, p_attributes=None, ist_number=None, ist_id=None):
         "p_id 生成p number序列 从1开始。 按照分类生成"
-        ist_number = self.instance_seq.up_seq(p_category)
+        if ist_number is None:
+            ist_number = self.instance_seq.up_seq(p_category)
         ist = ImgInstance(
-            id=gen_uuid(),
+            id=gen_uuid() if ist_id is None else ist_id,
             number=ist_number,
             category=p_category,
             ist_attr=p_attributes if p_attributes else dict(),
