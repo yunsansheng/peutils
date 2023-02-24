@@ -53,7 +53,7 @@ from peutils.datautil import GenCategorySeq
 
 class ImgComPre():
     ### 提供ImgComFrame实例对象frame_list，或者提供frame_length构造一个空的
-    def __init__(self, frame_length, instance_lst=None, raw_frames=None):
+    def __init__(self, frame_length, instance_lst=None, raw_frames=None, cam_names=None):
 
         self.frame_length = frame_length
 
@@ -81,6 +81,11 @@ class ImgComPre():
         self.instance_seq = GenCategorySeq()
         self.imgobj_seq = GenCategorySeq()
         self.frameorder_seq = GenCategorySeq()
+        if self.cam_names is None:
+            self.cam_names = ["default"]
+        else:
+            assert isinstance(cam_names,list) is True,"cam_names必须是数组"
+            self.cam_names = cam_names
 
     def add_instance_obj(self, p_category, p_attributes=None, ist_number=None, ist_id=None):
         "p_id 生成p number序列 从1开始。 按照分类生成"
@@ -96,7 +101,7 @@ class ImgComPre():
         return ist
 
     def add_img_obj(self, instance, uuid, frameNum, c_category, shapeType, shape, c_attributes=None, isOCR=None,
-                    OCRText=None):
+                    OCRText=None, cam_name="default"):
         # child_seq = self.instance_seq.up_seq(c_category)
         ### 先判断uuid + c_category 当前有没有
 
@@ -126,7 +131,8 @@ class ImgComPre():
                 img_attr=c_attributes if c_attributes else dict(),
                 order=frame_order,
                 isOCR=isOCR,
-                OCRText=OCRText
+                OCRText=OCRText,
+                cam_name=cam_name
             )
         )
 
@@ -135,9 +141,9 @@ class ImgComPre():
             "instances": [i.to_pre_dict() for i in self.instance_lst],
             "frames": [
                 {
-                    "camera": "default",
+                    "camera": cam_name,
                     "frames": self.frames
-                }
+                } for cam_name in self.cam_names
             ]
         }
         instances_data = json.dumps(_to_instances_dict, ensure_ascii=False)

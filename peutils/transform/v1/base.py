@@ -379,33 +379,74 @@ class ImgInstance():
 
         ## 计算child_dict
         child_dict = dict()
-        for item in self.obj_list:
-            child_id = item.id
-            if child_id not in child_dict:
-                child_dict[child_id] = {
-                    "id": item.id,
-                    "name": item.category,
-                    "number": item.number,
-                    "cameras": [{
-                        "camera": "default",
-                        "frames": []
-                    }]
-                }
-            ## 添加这条数据到frames信息中
-            pre_item = {
-                "frameIndex": item.frameNum,
-                "isKeyFrame": True,
-                "shapeType": item.shapeType,
-                "shape": item.shape,
-                "order": item.order,
-                "attributes": item.img_attr,
-            }
-            if item.isOCR is not None:
-                pre_item["isOCR"] = item.isOCR
-            if item.OCRText is not None:
-                pre_item["OCRText"] = item.OCRText
 
-            child_dict[child_id]["cameras"][0]["frames"].append(pre_item)
+        if self.obj_list[0].cam_name == "default":
+            for item in self.obj_list:
+                child_id = item.id
+                if child_id not in child_dict:
+                    child_dict[child_id] = {
+                        "id": item.id,
+                        "name": item.category,
+                        "number": item.number,
+                        "cameras": [{
+                            "camera": "default",
+                            "frames": []
+                        }]
+                    }
+                ## 添加这条数据到frames信息中
+                pre_item = {
+                    "frameIndex": item.frameNum,
+                    "isKeyFrame": True,
+                    "shapeType": item.shapeType,
+                    "shape": item.shape,
+                    "order": item.order,
+                    "attributes": item.img_attr,
+                }
+                if item.isOCR is not None:
+                    pre_item["isOCR"] = item.isOCR
+                if item.OCRText is not None:
+                    pre_item["OCRText"] = item.OCRText
+
+                child_dict[child_id]["cameras"][0]["frames"].append(pre_item)
+
+        else:
+            for item in self.obj_list:
+                child_id = item.id
+                if child_id not in child_dict:
+                    child_dict[child_id] = {
+                        "id": item.id,
+                        "name": item.category,
+                        "number": item.number,
+                        "cameras": [{
+                            "camera": item.cam_name,
+                            "frames": []
+                        }]
+                    }
+
+                else:
+                    child_cameras = [c["camera"] for c in child_dict[child_id]["cameras"]]
+                    if item.cam_name not in child_cameras:
+                        child_dict[child_id]["cameras"].append({
+                            "camera": item.cam_name,
+                            "frames": []
+                        })
+
+                ## 添加这条数据到frames信息中
+                pre_item = {
+                    "frameIndex": item.frameNum,
+                    "isKeyFrame": True,
+                    "shapeType": item.shapeType,
+                    "shape": item.shape,
+                    "order": item.order,
+                    "attributes": item.img_attr,
+                }
+                if item.isOCR is not None:
+                    pre_item["isOCR"] = item.isOCR
+                if item.OCRText is not None:
+                    pre_item["OCRText"] = item.OCRText
+
+                idx = [c["camera"] for c in child_dict[child_id]["cameras"]].index(item.cam_name)
+                child_dict[child_id]["cameras"][idx]["frames"].append(pre_item)
         for _, v in child_dict.items():
             _pre_data_dict["children"].append(v)
         return _pre_data_dict
@@ -416,7 +457,7 @@ class Img2Dobj():
                  frameNum, id, number, category,
                  shapeType, order=None, shape=None, img_attr=None,
                  displayName="", color="",
-                 isOCR=None, OCRText=None
+                 isOCR=None, OCRText=None, cam_name="default"
                  ):
         self.instance = instance
         self.frameNum = frameNum
@@ -431,6 +472,7 @@ class Img2Dobj():
         self.img_attr = DotDict(img_attr) if img_attr else DotDict()
         self.isOCR = isOCR
         self.OCRText = OCRText
+        self.cam_name = cam_name
 
     def get_bbox(self):
         # xmin ymin w h
