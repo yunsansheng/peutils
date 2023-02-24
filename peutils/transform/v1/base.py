@@ -171,7 +171,7 @@ class ErrorMsgLogV1():
                         "instanceId": obj.instance.id,
                         "instanceItemId": obj.id
                     }
-                elif isinstance(obj,Lidar3dObj) or isinstance(obj,Lidar3dPolygonObj):
+                elif isinstance(obj,Lidar3dObj) or isinstance(obj,Lidar3dPolygonObj) or isinstance(obj,LidarPointObj):
                     info = {
                         "type": "cube",
                         "id":obj.id,
@@ -439,6 +439,7 @@ class ImgInstance():
                     "shape": item.shape,
                     "order": item.order,
                     "attributes": item.img_attr,
+                    "layer":item.layer
                 }
                 if item.isOCR is not None:
                     pre_item["isOCR"] = item.isOCR
@@ -457,7 +458,7 @@ class Img2Dobj():
                  frameNum, id, number, category,
                  shapeType, order=None, shape=None, img_attr=None,
                  displayName="", color="",
-                 isOCR=None, OCRText=None, cam_name="default"
+                 isOCR=None, OCRText=None, cam_name="default",layer=0
                  ):
         self.instance = instance
         self.frameNum = frameNum
@@ -473,6 +474,7 @@ class Img2Dobj():
         self.isOCR = isOCR
         self.OCRText = OCRText
         self.cam_name = cam_name
+        self.layer = layer
 
     def get_bbox(self):
         # xmin ymin w h

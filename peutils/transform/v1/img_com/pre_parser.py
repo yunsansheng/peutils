@@ -85,6 +85,7 @@ class ImgComPre():
             self.cam_names = ["default"]
         else:
             assert isinstance(cam_names,list) is True,"cam_names必须是数组"
+            assert "default" not in self.cam_names,"传入的镜头不能有default"
             self.cam_names = cam_names
 
     def add_instance_obj(self, p_category, p_attributes=None, ist_number=None, ist_id=None):
@@ -101,7 +102,7 @@ class ImgComPre():
         return ist
 
     def add_img_obj(self, instance, uuid, frameNum, c_category, shapeType, shape, c_attributes=None, isOCR=None,
-                    OCRText=None, cam_name="default"):
+                    OCRText=None, cam_name="default",layer=0):
         # child_seq = self.instance_seq.up_seq(c_category)
         ### 先判断uuid + c_category 当前有没有
 
@@ -132,7 +133,8 @@ class ImgComPre():
                 order=frame_order,
                 isOCR=isOCR,
                 OCRText=OCRText,
-                cam_name=cam_name
+                cam_name=cam_name,
+                layer = layer
             )
         )
 
