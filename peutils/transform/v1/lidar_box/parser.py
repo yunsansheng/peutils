@@ -19,7 +19,8 @@ from peutils.datautil import gen_uuid_seq
 class LidarBoxFrame():
     def __init__(self, frameId, frameUrl, isValid, frameUrlInternal, frameUrlExternal,
                  frame_attr, items, images,
-                 config):
+                 config,
+                 relations=None):
         self.frameId = frameId
         self.frameUrl = frameUrl
         self.isValid = isValid
@@ -39,6 +40,7 @@ class LidarBoxFrame():
         self.only_lidar_idset = self.lidar_dict.keys() - self._img_idset  # 只有3D 没有出现在2D的ID
         self.only_image_idset = self._img_idset - self.lidar_dict.keys()  # 只出现在2D没有出现在3D中的ID
         self.has_23d_idset = self.lidar_dict.keys() & self._img_idset  # 2D和3D都出现
+        self.relations=relations or []
 
     @staticmethod
     def get_img_idset(images_dict):
@@ -370,7 +372,8 @@ class LidarBoxParse(CommonBaseMixIn):
                     frame_attr=frame_attr,
                     items=raw_frame["items"],
                     images=raw_frame["images"],
-                    config=self.config
+                    config=self.config,
+                    relations=raw_frame['relations']
                 )
             frames_lst.append(frame)
 
