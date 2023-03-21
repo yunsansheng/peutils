@@ -81,7 +81,7 @@ class ImgComPre():
         self.instance_seq = GenCategorySeq()
         self.imgobj_seq = GenCategorySeq()
         self.frameorder_seq = GenCategorySeq()
-        if self.cam_names is None:
+        if cam_names is None:
             self.cam_names = ["default"]
         else:
             assert isinstance(cam_names,list) is True,"cam_names必须是数组"
