@@ -69,6 +69,7 @@ class LidarBoxFrame():
         '''
 
         rotation = dict_adapter(item["rotation"], out_adapter=self.config.number_adpter_func)
+        rotation2 = dict_adapter(item["rotation2"], out_adapter=self.config.number_adpter_func)
         position = dict_adapter(item["position"], out_adapter=self.config.number_adpter_func)
         dimension = dict_adapter(item["dimension"], out_adapter=self.config.number_adpter_func)
         ## 四元数
@@ -93,6 +94,7 @@ class LidarBoxFrame():
             category=item["category"],
             position=position,
             rotation=rotation,
+            rotation2=rotation2,
             dimension=dimension,
             quaternion=quaternion,
             lidar_attr=json.loads(item["labels"]) if item.get("labels") else dict(),

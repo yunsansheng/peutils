@@ -220,7 +220,7 @@ class ErrorMsgLogV1():
 
 
 class Lidar3dObj():
-    def __init__(self, frameNum, id, number, category, position, rotation, dimension,
+    def __init__(self, frameNum, id, number, category, position, rotation, rotation2, dimension,
                  lidar_attr=None, quaternion=None, pointCount=None, vertices=None, type=None):
         self.frameNum = frameNum
         self.id = id
@@ -228,6 +228,7 @@ class Lidar3dObj():
         self.category = category
         self.position = DotDict(position)
         self.rotation = DotDict(rotation)
+        self.rotation2 = DotDict(rotation2)
         self.dimension = DotDict(dimension)
 
         self.lidar_attr = DotDict(lidar_attr) if lidar_attr else DotDict()  # 属性
@@ -247,6 +248,7 @@ class Lidar3dObj():
             "category": self.category,
             "position": self.position,
             "rotation": self.rotation,
+            "rotation2": self.rotation2,
             "dimension": self.dimension,
             "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
         }
