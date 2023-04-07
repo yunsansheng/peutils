@@ -8,6 +8,7 @@ Short Description:
 Change History:
 
 '''
+from peutils.transform.v1.lidar_manifest.parser import LidarManifestConfig, LidarManifestParse
 
 from peutils.transform.v1.base import *
 import json
@@ -20,12 +21,14 @@ class LidarBoxFrame():
     def __init__(self, frameId, frameUrl, isValid, frameUrlInternal, frameUrlExternal,
                  frame_attr, items, images,
                  config,
+                 base_url,
                  relations=None):
         self.frameId = frameId
         self.frameUrl = frameUrl
         self.isValid = isValid
         self.frameUrlInternal = frameUrlInternal
         self.frameUrlExternal = frameUrlExternal
+        self.base_url = base_url
 
         self.log = ErrorMsgLogV1()
 
@@ -257,6 +260,9 @@ class LidarBoxFrame():
         camera_list = []
         camera_meta = dict()
 
+        if self.config.cam_parse_mode == "manifest_parse":
+            mfst_data = LidarManifestParse(self.base_url, config=LidarManifestConfig())
+
         for idx, img in enumerate(images):
 
             if self.config.has_ignore_frame is True:
@@ -268,7 +274,10 @@ class LidarBoxFrame():
                 imageUrlExternal = img.get("imageUrlExternal")
                 if img.get("image"):
                     image_path = img["image"]
-                    camera_name = image_path.split("/")[-2]
+                    if self.config.cam_parse_mode == "manifest_parse":
+                        camera_name = mfst_data.camera_list[idx]
+                    else:
+                        camera_name = image_path.split("/")[-2]
                 else:
                     image_path = None
                     camera_name = str(idx)
@@ -278,7 +287,10 @@ class LidarBoxFrame():
                 width = img["width"]
                 height = img["height"]
                 image_path = img["image"]
-                camera_name = image_path.split("/")[-2]
+                if self.config.cam_parse_mode == "manifest_parse":
+                    camera_name = mfst_data.camera_list[idx]
+                else:
+                    camera_name = image_path.split("/")[-2]
                 camera_list.append(camera_name)
 
                 imageUrlInternal = img["imageUrlInternal"]
@@ -375,7 +387,8 @@ class LidarBoxParse(CommonBaseMixIn):
                     items=raw_frame["items"],
                     images=raw_frame["images"],
                     config=self.config,
-                    relations=raw_frame['relations']
+                    relations=raw_frame['relations'],
+                    base_url=self.raw_data["baseUrl"]
                 )
             frames_lst.append(frame)
 
@@ -385,11 +398,12 @@ class LidarBoxParse(CommonBaseMixIn):
 class LidarBoxDataConfig():
     def __init__(self, yaw_only=True, has_pointCount=True, number_adpter_func=None,
                  parse_id_col="id", seq_start=0, overflow=False, has_ignore_frame=False,
-                 filter_frame=None, key_frames=None
+                 filter_frame=None, key_frames=None, cam_parse_mode=None
                  ):
         # has_ignore_frame 如果是True的时候，那么图片的宽高和和isvalid可以为空
         # filter_frame 默认None odd 奇数 even 偶数
         # key_frames 默认None 需要解析的关键帧
+        # cam_parse_mode 镜头名字解析模式，默认是取文件夹名字 可选值有manifest_parse
         self.yaw_only = yaw_only
         self.has_pointCount = has_pointCount
         self.number_adpter_func = number_adpter_func
@@ -399,6 +413,7 @@ class LidarBoxDataConfig():
         self.has_ignore_frame = has_ignore_frame
         self.filter_frame = filter_frame
         self.key_frames = key_frames
+        self.cam_parse_mode = cam_parse_mode
 
 
 from pprint import pprint
