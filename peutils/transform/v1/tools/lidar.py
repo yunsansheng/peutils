@@ -143,8 +143,8 @@ def camera_pos_to_image_loc(*args,camera_pos,internal_arr,adapter=None):
                 0, 0, 1, 0
             ]
         ]
-        ix = fx * x / z + cx + 0.5
-        iy = fy * y / z + cy + 0.5
+        ix = fx * x / z + cx
+        iy = fy * y / z + cy
     '''
     fx = internal_arr[0][0]
     fy = internal_arr[1][1]
@@ -153,8 +153,8 @@ def camera_pos_to_image_loc(*args,camera_pos,internal_arr,adapter=None):
 
     # print(fx, fy, cx, cy)
 
-    ix = fx * camera_pos[0] / camera_pos[2] + cx + 0.5
-    iy = fy * camera_pos[1] / camera_pos[2] + cy + 0.5
+    ix = fx * camera_pos[0] / camera_pos[2] + cx
+    iy = fy * camera_pos[1] / camera_pos[2] + cy
     if adapter is None:
         return  (ix, iy)
     else:
