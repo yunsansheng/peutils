@@ -36,27 +36,27 @@ except ImportError:
     HAS_SENSOR_MSGS = False
 
 __all__ = ['PointCloud',
-           # 'point_cloud_to_path',
-           # 'point_cloud_to_buffer',
-           # 'point_cloud_to_fileobj',
+           'point_cloud_to_path',
+           'point_cloud_to_buffer',
+           'point_cloud_to_fileobj',
            'point_cloud_from_path',
            'point_cloud_from_buffer',
            'point_cloud_from_fileobj',
-           # 'make_xyz_point_cloud',
-           # 'make_xyz_rgb_point_cloud',
-           # 'make_xyz_label_point_cloud',
-           # 'save_txt',
-           # 'cat_point_clouds',
-           # 'add_fields',
-           # 'update_field',
-           # 'build_ascii_fmtstr',
-           # 'encode_rgb_for_pcl',
-           # 'decode_rgb_from_pcl',
-           # 'save_point_cloud',
-           # 'save_point_cloud_bin',
-           # 'save_point_cloud_bin_compressed',
-           # 'pcd_type_to_numpy_type',
-           # 'numpy_type_to_pcd_type',
+           'make_xyz_point_cloud',
+           'make_xyz_rgb_point_cloud',
+           'make_xyz_label_point_cloud',
+           'save_txt',
+           'cat_point_clouds',
+           'add_fields',
+           'update_field',
+           'build_ascii_fmtstr',
+           'encode_rgb_for_pcl',
+           'decode_rgb_from_pcl',
+           'save_point_cloud',
+           'save_point_cloud_bin',
+           'save_point_cloud_bin_compressed',
+           'pcd_type_to_numpy_type',
+           'numpy_type_to_pcd_type',
            ]
 
 if HAS_SENSOR_MSGS:
@@ -393,283 +393,283 @@ def point_cloud_to_fileobj(pc, fileobj, data_compression=None):
     # we can't close because if it's stringio buf then we can't get value after
 
 
-# def point_cloud_to_path(pc, fname):
-#     with open(fname, 'w') as f:
-#         point_cloud_to_fileobj(pc, f)
-#
-#
-# def point_cloud_to_buffer(pc, data_compression=None):
-#     fileobj = sio.StringIO()
-#     point_cloud_to_fileobj(pc, fileobj, data_compression)
-#     return fileobj.getvalue()
-#
-#
-# def save_point_cloud(pc, fname):
-#     """ Save pointcloud to fname in ascii format.
-#     """
-#     with open(fname, 'w') as f:
-#         point_cloud_to_fileobj(pc, f, 'ascii')
-#
-#
-# def save_point_cloud_bin(pc, fname):
-#     """ Save pointcloud to fname in binary format.
-#     """
-#     with open(fname, 'w') as f:
-#         point_cloud_to_fileobj(pc, f, 'binary')
-#
-#
-# def save_point_cloud_bin_compressed(pc, fname):
-#     """ Save pointcloud to fname in binary compressed format.
-#     """
-#     with open(fname, 'w') as f:
-#         point_cloud_to_fileobj(pc, f, 'binary_compressed')
-#
-#
-# def save_xyz_label(pc, fname, use_default_lbl=False):
-#     """ Save a simple (x y z label) pointcloud, ignoring all other features.
-#     Label is initialized to 1000, for an obscure program I use.
-#     """
-#     md = pc.get_metadata()
-#     if not use_default_lbl and ('label' not in md['fields']):
-#         raise Exception('label is not a field in this point cloud')
-#     with open(fname, 'w') as f:
-#         # for i in xrange(pc.points): modify by thomas
-#         for i in range(pc.points):
-#             x, y, z = ['%.4f' % d for d in (
-#                 pc.pc_data['x'][i], pc.pc_data['y'][i], pc.pc_data['z'][i]
-#                 )]
-#             lbl = '1000' if use_default_lbl else pc.pc_data['label'][i]
-#             f.write(' '.join((x, y, z, lbl))+'\n')
-#
-#
-# def save_xyz_intensity_label(pc, fname, use_default_lbl=False):
-#     """ Save XYZI point cloud.
-#     """
-#     md = pc.get_metadata()
-#     if not use_default_lbl and ('label' not in md['fields']):
-#         raise Exception('label is not a field in this point cloud')
-#     if 'intensity' not in md['fields']:
-#         raise Exception('intensity is not a field in this point cloud')
-#     with open(fname, 'w') as f:
-#         # for i in xrange(pc.points): modify by thomas
-#         for i in range(pc.points):
-#             x, y, z = ['%.4f' % d for d in (
-#                 pc.pc_data['x'][i], pc.pc_data['y'][i], pc.pc_data['z'][i]
-#                 )]
-#             intensity = '%.4f' % pc.pc_data['intensity'][i]
-#             lbl = '1000' if use_default_lbl else pc.pc_data['label'][i]
-#             f.write(' '.join((x, y, z, intensity, lbl))+'\n')
-#
-#
-# def save_txt(pc, fname, header=True):
-#     """ Save to csv-style text file, separated by spaces.
-#     TODO:
-#     - support multi-count fields.
-#     - other delimiters.
-#     """
-#     with open(fname, 'w') as f:
-#         if header:
-#             header_lst = []
-#             for field_name, cnt in zip(pc.fields, pc.count):
-#                 if cnt == 1:
-#                     header_lst.append(field_name)
-#                 else:
-#                     # for c in xrange(cnt): modify by thomas
-#                     for c in range(cnt):
-#                         header_lst.append('%s_%04d' % (field_name, c))
-#             f.write(' '.join(header_lst)+'\n')
-#         fmtstr = build_ascii_fmtstr(pc)
-#         np.savetxt(f, pc.pc_data, fmt=fmtstr)
-#
-#
-# def update_field(pc, field, pc_data):
-#     """ Updates field in-place.
-#     """
-#     pc.pc_data[field] = pc_data
-#     return pc
-#
-#
-# def add_fields(pc, metadata, pc_data):
-#     """ Builds copy of pointcloud with extra fields.
-#     Multi-count fields are sketchy, yet again.
-#     """
-#     if len(set(metadata['fields']).intersection(set(pc.fields))) > 0:
-#         raise Exception("Fields with that name exist.")
-#
-#     if pc.points != len(pc_data):
-#         raise Exception("Mismatch in number of points.")
-#
-#     new_metadata = pc.get_metadata()
-#     new_metadata['fields'].extend(metadata['fields'])
-#     new_metadata['count'].extend(metadata['count'])
-#     new_metadata['size'].extend(metadata['size'])
-#     new_metadata['type'].extend(metadata['type'])
-#
-#     # parse metadata to add
-#     # TODO factor this
-#     fieldnames, typenames = [], []
-#     for f, c, t, s in zip(metadata['fields'],
-#                           metadata['count'],
-#                           metadata['type'],
-#                           metadata['size']):
-#         np_type = pcd_type_to_numpy_type[(t, s)]
-#         if c == 1:
-#             fieldnames.append(f)
-#             typenames.append(np_type)
-#         else:
-#             # fieldnames.extend(['%s_%04d' % (f, i) for i in xrange(c)]) modify by thomas
-#             fieldnames.extend(['%s_%04d' % (f, i) for i in range(c)])
-#             typenames.extend([np_type]*c)
-#     dtype = zip(fieldnames, typenames)
-#     # new dtype. could be inferred?
-#     new_dtype = [(f, pc.pc_data.dtype[f])
-#                  for f in pc.pc_data.dtype.names] + dtype
-#
-#     new_data = np.empty(len(pc.pc_data), new_dtype)
-#     for n in pc.pc_data.dtype.names:
-#         new_data[n] = pc.pc_data[n]
-#     for n, n_tmp in zip(fieldnames, pc_data.dtype.names):
-#         new_data[n] = pc_data[n_tmp]
-#
-#     # TODO maybe just all the metadata in the dtype.
-#     # TODO maybe use composite structured arrays for fields with count > 1
-#     newpc = PointCloud(new_metadata, new_data)
-#     return newpc
-#
-#
-# def cat_point_clouds(pc1, pc2):
-#     """ Concatenate two point clouds into bigger point cloud.
-#     Point clouds must have same metadata.
-#     """
-#     if len(pc1.fields) != len(pc2.fields):
-#         raise ValueError("Pointclouds must have same fields")
-#     new_metadata = pc1.get_metadata()
-#     new_data = np.concatenate((pc1.pc_data, pc2.pc_data))
-#     # TODO this only makes sense for unstructured pc?
-#     new_metadata['width'] = pc1.width+pc2.width
-#     new_metadata['points'] = pc1.points+pc2.points
-#     pc3 = PointCloud(new_metadata, new_data)
-#     return pc3
-#
-#
-# def make_xyz_point_cloud(xyz, metadata=None):
-#     """ Make a pointcloud object from xyz array.
-#     xyz array is cast to float32.
-#     """
-#     md = {'version': .7,
-#           'fields': ['x', 'y', 'z'],
-#           'size': [4, 4, 4],
-#           'type': ['F', 'F', 'F'],
-#           'count': [1, 1, 1],
-#           'width': len(xyz),
-#           'height': 1,
-#           'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-#           'points': len(xyz),
-#           'data': 'binary'}
-#     if metadata is not None:
-#         md.update(metadata)
-#     xyz = xyz.astype(np.float32)
-#     pc_data = xyz.view(np.dtype([('x', np.float32),
-#                                  ('y', np.float32),
-#                                  ('z', np.float32)]))
-#     # pc_data = np.rec.fromarrays([xyz[:,0], xyz[:,1], xyz[:,2]], dtype=dt)
-#     # data = np.rec.fromarrays([xyz.T], dtype=dt)
-#     pc = PointCloud(md, pc_data)
-#     return pc
-#
-#
-# def make_xyz_rgb_point_cloud(xyz_rgb, metadata=None):
-#     """ Make a pointcloud object from xyz array.
-#     xyz array is assumed to be float32.
-#     rgb is assumed to be encoded as float32 according to pcl conventions.
-#     """
-#     md = {'version': .7,
-#           'fields': ['x', 'y', 'z', 'rgb'],
-#           'count': [1, 1, 1, 1],
-#           'width': len(xyz_rgb),
-#           'height': 1,
-#           'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-#           'points': len(xyz_rgb),
-#           'type': ['F', 'F', 'F', 'F'],
-#           'size': [4, 4, 4, 4],
-#           'data': 'binary'}
-#     if xyz_rgb.dtype != np.float32:
-#         raise ValueError('array must be float32')
-#     if metadata is not None:
-#         md.update(metadata)
-#     pc_data = xyz_rgb.view(np.dtype([('x', np.float32),
-#                                      ('y', np.float32),
-#                                      ('z', np.float32),
-#                                      ('rgb', np.float32)])).squeeze()
-#     # pc_data = np.rec.fromarrays([xyz[:,0], xyz[:,1], xyz[:,2]], dtype=dt)
-#     # data = np.rec.fromarrays([xyz.T], dtype=dt)
-#     pc = PointCloud(md, pc_data)
-#     return pc
-#
-#
-# def encode_rgb_for_pcl(rgb):
-#     """ Encode bit-packed RGB for use with PCL.
-#     :param rgb: Nx3 uint8 array with RGB values.
-#     :rtype: Nx1 float32 array with bit-packed RGB, for PCL.
-#     """
-#     assert(rgb.dtype == np.uint8)
-#     assert(rgb.ndim == 2)
-#     assert(rgb.shape[1] == 3)
-#     rgb = rgb.astype(np.uint32)
-#     rgb = np.array((rgb[:, 0] << 16) | (rgb[:, 1] << 8) | (rgb[:, 2] << 0),
-#                    dtype=np.uint32)
-#     rgb.dtype = np.float32
-#     return rgb
-#
-#
-# def decode_rgb_from_pcl(rgb):
-#     """ Decode the bit-packed RGBs used by PCL.
-#     :param rgb: An Nx1 array.
-#     :rtype: Nx3 uint8 array with one column per color.
-#     """
-#
-#     rgb = rgb.copy()
-#     rgb.dtype = np.uint32
-#     r = np.asarray((rgb >> 16) & 255, dtype=np.uint8)
-#     g = np.asarray((rgb >> 8) & 255, dtype=np.uint8)
-#     b = np.asarray(rgb & 255, dtype=np.uint8)
-#     rgb_arr = np.zeros((len(rgb), 3), dtype=np.uint8)
-#     rgb_arr[:, 0] = r
-#     rgb_arr[:, 1] = g
-#     rgb_arr[:, 2] = b
-#     return rgb_arr
-#
-#
-# def make_xyz_label_point_cloud(xyzl, label_type='f'):
-#     """ Make XYZL point cloud from numpy array.
-#     TODO i labels?
-#     """
-#     md = {'version': .7,
-#           'fields': ['x', 'y', 'z', 'label'],
-#           'count': [1, 1, 1, 1],
-#           'width': len(xyzl),
-#           'height': 1,
-#           'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-#           'points': len(xyzl),
-#           'data': 'ASCII'}
-#     if label_type.lower() == 'f':
-#         md['size'] = [4, 4, 4, 4]
-#         md['type'] = ['F', 'F', 'F', 'F']
-#     elif label_type.lower() == 'u':
-#         md['size'] = [4, 4, 4, 1]
-#         md['type'] = ['F', 'F', 'F', 'U']
-#     else:
-#         raise ValueError('label type must be F or U')
-#     # TODO use .view()
-#     xyzl = xyzl.astype(np.float32)
-#     dt = np.dtype([('x', np.float32), ('y', np.float32), ('z', np.float32),
-#                    ('label', np.float32)])
-#     pc_data = np.rec.fromarrays([xyzl[:, 0], xyzl[:, 1], xyzl[:, 2],
-#                                  xyzl[:, 3]], dtype=dt)
-#     pc = PointCloud(md, pc_data)
-#     return pc
-#
-#
+def point_cloud_to_path(pc, fname):
+    with open(fname, 'w') as f:
+        point_cloud_to_fileobj(pc, f)
+
+
+def point_cloud_to_buffer(pc, data_compression=None):
+    fileobj = sio.StringIO()
+    point_cloud_to_fileobj(pc, fileobj, data_compression)
+    return fileobj.getvalue()
+
+
+def save_point_cloud(pc, fname):
+    """ Save pointcloud to fname in ascii format.
+    """
+    with open(fname, 'w') as f:
+        point_cloud_to_fileobj(pc, f, 'ascii')
+
+
+def save_point_cloud_bin(pc, fname):
+    """ Save pointcloud to fname in binary format.
+    """
+    with open(fname, 'w') as f:
+        point_cloud_to_fileobj(pc, f, 'binary')
+
+
+def save_point_cloud_bin_compressed(pc, fname):
+    """ Save pointcloud to fname in binary compressed format.
+    """
+    with open(fname, 'w') as f:
+        point_cloud_to_fileobj(pc, f, 'binary_compressed')
+
+
+def save_xyz_label(pc, fname, use_default_lbl=False):
+    """ Save a simple (x y z label) pointcloud, ignoring all other features.
+    Label is initialized to 1000, for an obscure program I use.
+    """
+    md = pc.get_metadata()
+    if not use_default_lbl and ('label' not in md['fields']):
+        raise Exception('label is not a field in this point cloud')
+    with open(fname, 'w') as f:
+        # for i in xrange(pc.points): modify by thomas
+        for i in range(pc.points):
+            x, y, z = ['%.4f' % d for d in (
+                pc.pc_data['x'][i], pc.pc_data['y'][i], pc.pc_data['z'][i]
+                )]
+            lbl = '1000' if use_default_lbl else pc.pc_data['label'][i]
+            f.write(' '.join((x, y, z, lbl))+'\n')
+
+
+def save_xyz_intensity_label(pc, fname, use_default_lbl=False):
+    """ Save XYZI point cloud.
+    """
+    md = pc.get_metadata()
+    if not use_default_lbl and ('label' not in md['fields']):
+        raise Exception('label is not a field in this point cloud')
+    if 'intensity' not in md['fields']:
+        raise Exception('intensity is not a field in this point cloud')
+    with open(fname, 'w') as f:
+        # for i in xrange(pc.points): modify by thomas
+        for i in range(pc.points):
+            x, y, z = ['%.4f' % d for d in (
+                pc.pc_data['x'][i], pc.pc_data['y'][i], pc.pc_data['z'][i]
+                )]
+            intensity = '%.4f' % pc.pc_data['intensity'][i]
+            lbl = '1000' if use_default_lbl else pc.pc_data['label'][i]
+            f.write(' '.join((x, y, z, intensity, lbl))+'\n')
+
+
+def save_txt(pc, fname, header=True):
+    """ Save to csv-style text file, separated by spaces.
+    TODO:
+    - support multi-count fields.
+    - other delimiters.
+    """
+    with open(fname, 'w') as f:
+        if header:
+            header_lst = []
+            for field_name, cnt in zip(pc.fields, pc.count):
+                if cnt == 1:
+                    header_lst.append(field_name)
+                else:
+                    # for c in xrange(cnt): modify by thomas
+                    for c in range(cnt):
+                        header_lst.append('%s_%04d' % (field_name, c))
+            f.write(' '.join(header_lst)+'\n')
+        fmtstr = build_ascii_fmtstr(pc)
+        np.savetxt(f, pc.pc_data, fmt=fmtstr)
+
+
+def update_field(pc, field, pc_data):
+    """ Updates field in-place.
+    """
+    pc.pc_data[field] = pc_data
+    return pc
+
+
+def add_fields(pc, metadata, pc_data):
+    """ Builds copy of pointcloud with extra fields.
+    Multi-count fields are sketchy, yet again.
+    """
+    if len(set(metadata['fields']).intersection(set(pc.fields))) > 0:
+        raise Exception("Fields with that name exist.")
+
+    if pc.points != len(pc_data):
+        raise Exception("Mismatch in number of points.")
+
+    new_metadata = pc.get_metadata()
+    new_metadata['fields'].extend(metadata['fields'])
+    new_metadata['count'].extend(metadata['count'])
+    new_metadata['size'].extend(metadata['size'])
+    new_metadata['type'].extend(metadata['type'])
+
+    # parse metadata to add
+    # TODO factor this
+    fieldnames, typenames = [], []
+    for f, c, t, s in zip(metadata['fields'],
+                          metadata['count'],
+                          metadata['type'],
+                          metadata['size']):
+        np_type = pcd_type_to_numpy_type[(t, s)]
+        if c == 1:
+            fieldnames.append(f)
+            typenames.append(np_type)
+        else:
+            # fieldnames.extend(['%s_%04d' % (f, i) for i in xrange(c)]) modify by thomas
+            fieldnames.extend(['%s_%04d' % (f, i) for i in range(c)])
+            typenames.extend([np_type]*c)
+    dtype = zip(fieldnames, typenames)
+    # new dtype. could be inferred?
+    new_dtype = [(f, pc.pc_data.dtype[f])
+                 for f in pc.pc_data.dtype.names] + dtype
+
+    new_data = np.empty(len(pc.pc_data), new_dtype)
+    for n in pc.pc_data.dtype.names:
+        new_data[n] = pc.pc_data[n]
+    for n, n_tmp in zip(fieldnames, pc_data.dtype.names):
+        new_data[n] = pc_data[n_tmp]
+
+    # TODO maybe just all the metadata in the dtype.
+    # TODO maybe use composite structured arrays for fields with count > 1
+    newpc = PointCloud(new_metadata, new_data)
+    return newpc
+
+
+def cat_point_clouds(pc1, pc2):
+    """ Concatenate two point clouds into bigger point cloud.
+    Point clouds must have same metadata.
+    """
+    if len(pc1.fields) != len(pc2.fields):
+        raise ValueError("Pointclouds must have same fields")
+    new_metadata = pc1.get_metadata()
+    new_data = np.concatenate((pc1.pc_data, pc2.pc_data))
+    # TODO this only makes sense for unstructured pc?
+    new_metadata['width'] = pc1.width+pc2.width
+    new_metadata['points'] = pc1.points+pc2.points
+    pc3 = PointCloud(new_metadata, new_data)
+    return pc3
+
+
+def make_xyz_point_cloud(xyz, metadata=None):
+    """ Make a pointcloud object from xyz array.
+    xyz array is cast to float32.
+    """
+    md = {'version': .7,
+          'fields': ['x', 'y', 'z'],
+          'size': [4, 4, 4],
+          'type': ['F', 'F', 'F'],
+          'count': [1, 1, 1],
+          'width': len(xyz),
+          'height': 1,
+          'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+          'points': len(xyz),
+          'data': 'binary'}
+    if metadata is not None:
+        md.update(metadata)
+    xyz = xyz.astype(np.float32)
+    pc_data = xyz.view(np.dtype([('x', np.float32),
+                                 ('y', np.float32),
+                                 ('z', np.float32)]))
+    # pc_data = np.rec.fromarrays([xyz[:,0], xyz[:,1], xyz[:,2]], dtype=dt)
+    # data = np.rec.fromarrays([xyz.T], dtype=dt)
+    pc = PointCloud(md, pc_data)
+    return pc
+
+
+def make_xyz_rgb_point_cloud(xyz_rgb, metadata=None):
+    """ Make a pointcloud object from xyz array.
+    xyz array is assumed to be float32.
+    rgb is assumed to be encoded as float32 according to pcl conventions.
+    """
+    md = {'version': .7,
+          'fields': ['x', 'y', 'z', 'rgb'],
+          'count': [1, 1, 1, 1],
+          'width': len(xyz_rgb),
+          'height': 1,
+          'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+          'points': len(xyz_rgb),
+          'type': ['F', 'F', 'F', 'F'],
+          'size': [4, 4, 4, 4],
+          'data': 'binary'}
+    if xyz_rgb.dtype != np.float32:
+        raise ValueError('array must be float32')
+    if metadata is not None:
+        md.update(metadata)
+    pc_data = xyz_rgb.view(np.dtype([('x', np.float32),
+                                     ('y', np.float32),
+                                     ('z', np.float32),
+                                     ('rgb', np.float32)])).squeeze()
+    # pc_data = np.rec.fromarrays([xyz[:,0], xyz[:,1], xyz[:,2]], dtype=dt)
+    # data = np.rec.fromarrays([xyz.T], dtype=dt)
+    pc = PointCloud(md, pc_data)
+    return pc
+
+
+def encode_rgb_for_pcl(rgb):
+    """ Encode bit-packed RGB for use with PCL.
+    :param rgb: Nx3 uint8 array with RGB values.
+    :rtype: Nx1 float32 array with bit-packed RGB, for PCL.
+    """
+    assert(rgb.dtype == np.uint8)
+    assert(rgb.ndim == 2)
+    assert(rgb.shape[1] == 3)
+    rgb = rgb.astype(np.uint32)
+    rgb = np.array((rgb[:, 0] << 16) | (rgb[:, 1] << 8) | (rgb[:, 2] << 0),
+                   dtype=np.uint32)
+    rgb.dtype = np.float32
+    return rgb
+
+
+def decode_rgb_from_pcl(rgb):
+    """ Decode the bit-packed RGBs used by PCL.
+    :param rgb: An Nx1 array.
+    :rtype: Nx3 uint8 array with one column per color.
+    """
+
+    rgb = rgb.copy()
+    rgb.dtype = np.uint32
+    r = np.asarray((rgb >> 16) & 255, dtype=np.uint8)
+    g = np.asarray((rgb >> 8) & 255, dtype=np.uint8)
+    b = np.asarray(rgb & 255, dtype=np.uint8)
+    rgb_arr = np.zeros((len(rgb), 3), dtype=np.uint8)
+    rgb_arr[:, 0] = r
+    rgb_arr[:, 1] = g
+    rgb_arr[:, 2] = b
+    return rgb_arr
+
+
+def make_xyz_label_point_cloud(xyzl, label_type='f'):
+    """ Make XYZL point cloud from numpy array.
+    TODO i labels?
+    """
+    md = {'version': .7,
+          'fields': ['x', 'y', 'z', 'label'],
+          'count': [1, 1, 1, 1],
+          'width': len(xyzl),
+          'height': 1,
+          'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+          'points': len(xyzl),
+          'data': 'ASCII'}
+    if label_type.lower() == 'f':
+        md['size'] = [4, 4, 4, 4]
+        md['type'] = ['F', 'F', 'F', 'F']
+    elif label_type.lower() == 'u':
+        md['size'] = [4, 4, 4, 1]
+        md['type'] = ['F', 'F', 'F', 'U']
+    else:
+        raise ValueError('label type must be F or U')
+    # TODO use .view()
+    xyzl = xyzl.astype(np.float32)
+    dt = np.dtype([('x', np.float32), ('y', np.float32), ('z', np.float32),
+                   ('label', np.float32)])
+    pc_data = np.rec.fromarrays([xyzl[:, 0], xyzl[:, 1], xyzl[:, 2],
+                                 xyzl[:, 3]], dtype=dt)
+    pc = PointCloud(md, pc_data)
+    return pc
+
+
 class PointCloud(object):
     """ Wrapper for point cloud data.
     The variable members of this class parallel the ones used by
@@ -716,120 +716,120 @@ class PointCloud(object):
         assert(len(self.fields) == len(self.count))
         assert(len(self.fields) == len(self.type))
 
-#     def save(self, fname):
-#         self.save_pcd(fname, 'ascii')
-#
-#     def save_pcd(self, fname, compression=None, **kwargs):
-#         if 'data_compression' in kwargs:
-#             warnings.warn('data_compression keyword is deprecated for'
-#                           ' compression')
-#             compression = kwargs['data_compression']
-#         with open(fname, 'w') as f:
-#             point_cloud_to_fileobj(self, f, compression)
-#
-#     def save_pcd_to_fileobj(self, fileobj, compression=None, **kwargs):
-#         if 'data_compression' in kwargs:
-#             warnings.warn('data_compression keyword is deprecated for'
-#                           ' compression')
-#             compression = kwargs['data_compression']
-#         point_cloud_to_fileobj(self, fileobj, compression)
-#
-#     def save_pcd_to_buffer(self, compression=None, **kwargs):
-#         if 'data_compression' in kwargs:
-#             warnings.warn('data_compression keyword is deprecated for'
-#                           ' compression')
-#             compression = kwargs['data_compression']
-#         return point_cloud_to_buffer(self, compression)
-#
-#     def save_txt(self, fname):
-#         save_txt(self, fname)
-#
-#     def save_xyz_label(self, fname, **kwargs):
-#         save_xyz_label(self, fname, **kwargs)
-#
-#     def save_xyz_intensity_label(self, fname, **kwargs):
-#         save_xyz_intensity_label(self, fname, **kwargs)
-#
-#     def copy(self):
-#         new_pc_data = np.copy(self.pc_data)
-#         new_metadata = self.get_metadata()
-#         return PointCloud(new_metadata, new_pc_data)
-#
-#     def to_msg(self):
-#         if not HAS_SENSOR_MSGS:
-#             raise Exception('ROS sensor_msgs not found')
-#         # TODO is there some metadata we want to attach?
-#         return numpy_pc2.array_to_pointcloud2(self.pc_data)
-#
+    def save(self, fname):
+        self.save_pcd(fname, 'ascii')
+
+    def save_pcd(self, fname, compression=None, **kwargs):
+        if 'data_compression' in kwargs:
+            warnings.warn('data_compression keyword is deprecated for'
+                          ' compression')
+            compression = kwargs['data_compression']
+        with open(fname, 'w') as f:
+            point_cloud_to_fileobj(self, f, compression)
+
+    def save_pcd_to_fileobj(self, fileobj, compression=None, **kwargs):
+        if 'data_compression' in kwargs:
+            warnings.warn('data_compression keyword is deprecated for'
+                          ' compression')
+            compression = kwargs['data_compression']
+        point_cloud_to_fileobj(self, fileobj, compression)
+
+    def save_pcd_to_buffer(self, compression=None, **kwargs):
+        if 'data_compression' in kwargs:
+            warnings.warn('data_compression keyword is deprecated for'
+                          ' compression')
+            compression = kwargs['data_compression']
+        return point_cloud_to_buffer(self, compression)
+
+    def save_txt(self, fname):
+        save_txt(self, fname)
+
+    def save_xyz_label(self, fname, **kwargs):
+        save_xyz_label(self, fname, **kwargs)
+
+    def save_xyz_intensity_label(self, fname, **kwargs):
+        save_xyz_intensity_label(self, fname, **kwargs)
+
+    def copy(self):
+        new_pc_data = np.copy(self.pc_data)
+        new_metadata = self.get_metadata()
+        return PointCloud(new_metadata, new_pc_data)
+
+    def to_msg(self):
+        if not HAS_SENSOR_MSGS:
+            raise Exception('ROS sensor_msgs not found')
+        # TODO is there some metadata we want to attach?
+        return numpy_pc2.array_to_pointcloud2(self.pc_data)
+
     @staticmethod
     def from_path(fname):
         return point_cloud_from_path(fname)
-#
-#     @staticmethod
-#     def from_fileobj(fileobj):
-#         return point_cloud_from_fileobj(fileobj)
-#
+
+    @staticmethod
+    def from_fileobj(fileobj):
+        return point_cloud_from_fileobj(fileobj)
+
     @staticmethod
     def from_buffer(buf):
         return point_cloud_from_buffer(buf)
-#
-#     @staticmethod
-#     def from_array(arr):
-#         """ create a PointCloud object from an array.
-#         """
-#         pc_data = arr.copy()
-#         md = {'version': .7,
-#               'fields': [],
-#               'size': [],
-#               'count': [],
-#               'width': 0,
-#               'height': 1,
-#               'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-#               'points': 0,
-#               'type': [],
-#               'data': 'binary_compressed'}
-#         md['fields'] = pc_data.dtype.names
-#         for field in md['fields']:
-#             type_, size_ =\
-#                 numpy_type_to_pcd_type[pc_data.dtype.fields[field][0]]
-#             md['type'].append(type_)
-#             md['size'].append(size_)
-#             # TODO handle multicount
-#             md['count'].append(1)
-#         md['width'] = len(pc_data)
-#         md['points'] = len(pc_data)
-#         pc = PointCloud(md, pc_data)
-#         return pc
-#
-#     @staticmethod
-#     def from_msg(msg, squeeze=True):
-#         """ from pointcloud2 msg
-#         squeeze: fix when clouds get 1 as first dim
-#         """
-#         if not HAS_SENSOR_MSGS:
-#             raise NotImplementedError('ROS sensor_msgs not found')
-#         md = {'version': .7,
-#               'fields': [],
-#               'size': [],
-#               'count': [],
-#               'width': msg.width,
-#               'height': msg.height,
-#               'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-#               'points': 0,
-#               'type': [],
-#               'data': 'binary_compressed'}
-#         for field in msg.fields:
-#             md['fields'].append(field.name)
-#             t, s = pc2_type_to_pcd_type[field.datatype]
-#             md['type'].append(t)
-#             md['size'].append(s)
-#             # TODO handle multicount correctly
-#             if field.count > 1:
-#                 warnings.warn('fields with count > 1 are not well tested')
-#             md['count'].append(field.count)
-#         pc_array = numpy_pc2.pointcloud2_to_array(msg)
-#         pc_data = pc_array.reshape(-1)
-#         md['height'], md['width'] = pc_array.shape
-#         md['points'] = len(pc_data)
-#         pc = PointCloud(md, pc_data)
-#         return pc
+
+    @staticmethod
+    def from_array(arr):
+        """ create a PointCloud object from an array.
+        """
+        pc_data = arr.copy()
+        md = {'version': .7,
+              'fields': [],
+              'size': [],
+              'count': [],
+              'width': 0,
+              'height': 1,
+              'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+              'points': 0,
+              'type': [],
+              'data': 'binary_compressed'}
+        md['fields'] = pc_data.dtype.names
+        for field in md['fields']:
+            type_, size_ =\
+                numpy_type_to_pcd_type[pc_data.dtype.fields[field][0]]
+            md['type'].append(type_)
+            md['size'].append(size_)
+            # TODO handle multicount
+            md['count'].append(1)
+        md['width'] = len(pc_data)
+        md['points'] = len(pc_data)
+        pc = PointCloud(md, pc_data)
+        return pc
+
+    @staticmethod
+    def from_msg(msg, squeeze=True):
+        """ from pointcloud2 msg
+        squeeze: fix when clouds get 1 as first dim
+        """
+        if not HAS_SENSOR_MSGS:
+            raise NotImplementedError('ROS sensor_msgs not found')
+        md = {'version': .7,
+              'fields': [],
+              'size': [],
+              'count': [],
+              'width': msg.width,
+              'height': msg.height,
+              'viewpoint': [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+              'points': 0,
+              'type': [],
+              'data': 'binary_compressed'}
+        for field in msg.fields:
+            md['fields'].append(field.name)
+            t, s = pc2_type_to_pcd_type[field.datatype]
+            md['type'].append(t)
+            md['size'].append(s)
+            # TODO handle multicount correctly
+            if field.count > 1:
+                warnings.warn('fields with count > 1 are not well tested')
+            md['count'].append(field.count)
+        pc_array = numpy_pc2.pointcloud2_to_array(msg)
+        pc_data = pc_array.reshape(-1)
+        md['height'], md['width'] = pc_array.shape
+        md['points'] = len(pc_data)
+        pc = PointCloud(md, pc_data)
+        return pc
