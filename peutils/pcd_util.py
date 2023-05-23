@@ -10,6 +10,7 @@ Change History:
 '''
 import numpy as np
 import plyfile
+from pypcd import pypcd
 
 
 # common ply convert pcd tool
@@ -30,5 +31,25 @@ def ply2pcd(ply_file_path, compression="binary"):
     metadata["data"] = compression
 
     points_data = np.array([plydata['vertex'][prop.name] for prop in plydata["vertex"].properties]).T
+    result_pc = pypcd.PointCloud(metadata, points_data)
+    return result_pc
 
-    return metadata, points_data
+
+# common merge pcds tool
+def merge_pcds(pcd_paths):
+    metadata = new_pc_data = None
+    for pcd_path in pcd_paths:
+        pc = pypcd.PointCloud.from_path(pcd_path)
+        if not metadata:
+            metadata = pc.get_metadata()
+        else:
+            metadata["points"] += pc.get_metadata()["points"]
+            metadata["width"] += pc.get_metadata()["width"]
+
+        if new_pc_data is None:
+            new_pc_data = pc.pc_data
+        else:
+            new_pc_data = np.concatenate((new_pc_data, pc.pc_data), axis=0)
+
+    result_pc = pypcd.PointCloud(metadata, new_pc_data)
+    return result_pc
