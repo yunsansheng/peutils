@@ -18,11 +18,14 @@ def ply2pcd(ply_file_path, compression="binary"):
     with open(ply_file_path, "rb") as ff:
         plydata = plyfile.PlyData.read(ff)
 
+    prop_names = [prop.name for prop in plydata["vertex"].properties]
+    prop_val_dtypes = [prop.val_dtype for prop in plydata["vertex"].properties]
+
     metadata = dict()
     metadata["version"] = "0.7"
-    metadata["fields"] = [prop.name for prop in plydata["vertex"].properties]
-    metadata["size"] = [int(val_dtype[1]) for val_dtype in [prop.val_dtype for prop in plydata["vertex"].properties]]
-    metadata["type"] = [val_dtype[0].upper() for val_dtype in [prop.val_dtype for prop in plydata["vertex"].properties]]
+    metadata["fields"] = prop_names
+    metadata["size"] = [int(val_dtype[1]) for val_dtype in prop_val_dtypes]
+    metadata["type"] = [val_dtype[0].upper() for val_dtype in prop_val_dtypes]
     metadata["count"] = " ".join("1" * len(plydata["vertex"].properties))
     metadata["width"] = len(plydata["vertex"])
     metadata["height"] = 1

@@ -539,7 +539,7 @@ pointsLabels
 
 
 class LidarPointObj():
-    def __init__(self, frameNum, id, category, number, points, point_attr, pointsLabels, pointCount, type):
+    def __init__(self, frameNum, id, category, number, points, point_attr, pointsLabels, pointCount, type, pointsInfo):
         self.frameNum = frameNum
         self.id = id
         self.category = category
@@ -549,6 +549,7 @@ class LidarPointObj():
         self.pointsLabels = pointsLabels  # 这个是点的 坐标和反射率信息的数组
         self.pointCount = pointCount
         self.type = type  # 平台工具多变形，笔刷，单点，都是point,折线是polyline
+        self.pointsInfo = pointsInfo
 
     def __repr__(self):
         return f"{self.id} {self.category} {self.number} {len(self.points)}P"
