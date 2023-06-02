@@ -165,12 +165,12 @@ class LidarBoxFrame():
         1.图像是否超出边界外
 
         '''
-        if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE"}:
+        if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE", "POLYGON_CAST"}:
             points = None
             rect1 = None
             rect2 = None
 
-            if item["type"] == "VANISH_CUBE":
+            if item["type"] in { "VANISH_CUBE","POLYGON_CAST" }:
                 points = item["points"]
 
             if item["type"] == "RECT_CUBE":
@@ -243,11 +243,11 @@ class LidarBoxFrame():
         single_image_dict = dict()
 
         for item in items:
-            if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE"}:
+            if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE","POLYGON_CAST"}:
                 key, img_obj = self.parse_img_by_item(item, width, height, img_idx)
                 single_image_dict[key] = img_obj
             else:
-                raise Exception("目前图像物体仅支持RECT VANISH_CUBE RECT_CUBE,其他类型还在开发中")
+                raise Exception("目前图像物体仅支持RECT VANISH_CUBE RECT_CUBE POLYGON_CAST,其他类型还在开发中")
 
         if len(items) != len(single_image_dict):
             raise Exception(f"{self.config.parse_id_col} 解析模式下数量不等，请检查使用参数")
