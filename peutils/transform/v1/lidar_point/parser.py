@@ -118,7 +118,7 @@ class LidarPointFrame():
             pointsLabels=item["pointsLabels"],
             pointCount = item["pointCount"],
             type = item["type"],
-            pointsInfo = item["pointsInfo"],
+            pointsInfo = item.get("pointsInfo", []),
         )
 
         if self.config.parse_id_col =="id":
