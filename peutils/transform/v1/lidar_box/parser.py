@@ -8,6 +8,8 @@ Short Description:
 Change History:
 
 '''
+from urllib.parse import unquote
+
 from peutils.transform.v1.lidar_manifest.parser import LidarManifestConfig, LidarManifestParse
 
 from peutils.transform.v1.base import *
@@ -277,7 +279,7 @@ class LidarBoxFrame():
                     if self.config.cam_parse_mode == "manifest_parse":
                         camera_name = mfst_data.camera_list[idx]
                     else:
-                        camera_name = image_path.split("/")[-2]
+                        camera_name = unquote(image_path).split("/")[-2]
                 else:
                     image_path = None
                     camera_name = str(idx)
@@ -290,7 +292,7 @@ class LidarBoxFrame():
                 if self.config.cam_parse_mode == "manifest_parse":
                     camera_name = mfst_data.camera_list[idx]
                 else:
-                    camera_name = image_path.split("/")[-2]
+                    camera_name = unquote(image_path).split("/")[-2]
                 camera_list.append(camera_name)
 
                 imageUrlInternal = img["imageUrlInternal"]
