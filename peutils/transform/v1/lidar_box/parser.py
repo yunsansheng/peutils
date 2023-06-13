@@ -19,7 +19,7 @@ from collections import defaultdict
 from peutils.datautil import gen_uuid_seq
 
 
-class LidarBoxFrame():
+class LidarBoxFrame(CommonBaseMixIn):
     def __init__(self, frameId, frameUrl, isValid, frameUrlInternal, frameUrlExternal,
                  frame_attr, items, images,
                  config,
@@ -264,6 +264,11 @@ class LidarBoxFrame():
 
         if self.config.cam_parse_mode == "manifest_parse":
             mfst_data = LidarManifestParse(self.base_url, config=LidarManifestConfig())
+        elif self.config.cam_parse_mode == "kitti_manifest":
+            mfst_data_json = self.get_raw_data(self.base_url)
+            # todo 这边先取首帧的cameras
+            cameras_data = mfst_data_json["frames"][0]["cameras"]
+            camera_names = [cam["name"] for cam in cameras_data]
 
         for idx, img in enumerate(images):
 
@@ -278,6 +283,8 @@ class LidarBoxFrame():
                     image_path = img["image"]
                     if self.config.cam_parse_mode == "manifest_parse":
                         camera_name = mfst_data.camera_list[idx]
+                    elif self.config.cam_parse_mode == "kitti_manifest":
+                        camera_name = camera_names[idx]
                     else:
                         camera_name = unquote(image_path).split("/")[-2]
                 else:
@@ -291,6 +298,8 @@ class LidarBoxFrame():
                 image_path = img["image"]
                 if self.config.cam_parse_mode == "manifest_parse":
                     camera_name = mfst_data.camera_list[idx]
+                elif self.config.cam_parse_mode == "kitti_manifest":
+                    camera_name = camera_names[idx]
                 else:
                     camera_name = unquote(image_path).split("/")[-2]
                 camera_list.append(camera_name)
@@ -406,6 +415,7 @@ class LidarBoxDataConfig():
         # filter_frame 默认None odd 奇数 even 偶数
         # key_frames 默认None 需要解析的关键帧
         # cam_parse_mode 镜头名字解析模式，默认是取文件夹名字 可选值有manifest_parse
+        # cam_parse_mode 新增kitti_manifest模式解析
         self.yaw_only = yaw_only
         self.has_pointCount = has_pointCount
         self.number_adpter_func = number_adpter_func
