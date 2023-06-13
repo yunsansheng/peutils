@@ -17,7 +17,7 @@ class LidarPointFrame():
     def __init__(self,frameId,frameUrl,isValid,isSpecial,frameUrlInternal,frameUrlExternal,totalPointCount,
                  imageAttributes,
                  frame_attr,items,images,
-                 config):
+                 config,relations):
         self.frameId = frameId
         self.frameUrl = frameUrl
         self.isValid = isValid
@@ -47,6 +47,7 @@ class LidarPointFrame():
         self.only_lidar_idset= self.lidar_dict.keys() - self._img_idset # 只有3D 没有出现在2D的ID
         self.only_image_idset = self._img_idset -  self.lidar_dict.keys() # 只出现在2D没有出现在3D中的ID
         self.has_23d_idset = self.lidar_dict.keys() & self._img_idset # 2D和3D都出现
+        self.relations = relations
 
 
 
@@ -277,7 +278,8 @@ class LidarPointParse(CommonBaseMixIn):
                 items = raw_frame["items"],
                 images = raw_frame["images"],
                 imageAttributes=raw_frame["imageAttributes"],
-                config= self.config
+                config= self.config,
+                relations=raw_frame.get("relations", [])
             )
             frames_lst.append(frame)
         return frames_lst,len(frames_lst)
