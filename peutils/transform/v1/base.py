@@ -251,7 +251,8 @@ class Lidar3dObj():
             "rotation2": self.rotation2 if self.rotation2 else None,
             "quaternion": self.quaternion if self.quaternion else None,
             "dimension": self.dimension,
-            "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
+            # "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
+            "labels": json.dumps(self.lidar_attr, ensure_ascii=False) if self.lidar_attr else "",
         }
         return _data_dict
 
