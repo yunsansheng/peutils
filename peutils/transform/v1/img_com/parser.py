@@ -11,6 +11,8 @@ Change History:
 from peutils.transform.v1.base import *
 import json
 from peutils.datautil import gen_uuid_seq
+from PIL import Image
+from io import BytesIO
 
 
 class ImgComFrame():
@@ -85,11 +87,39 @@ class ImgComParse(CommonBaseMixIn):
         frames_lst = []
         cam_idx = self.cameras_lst.index(self.config.camera)
         for raw_frame in self.raw_data["frames"][cam_idx]["frames"]: # 先解析default cam
+            if self.config.parse_img_size == "default":
+                imageWidth = raw_frame["imageWidth"]
+                imageHeight = raw_frame["imageHeight"]
+            elif self.config.parse_img_size == "imageIO":
+                if "imageWidth" in raw_frame:
+                    imageWidth = raw_frame["imageWidth"]
+                    imageHeight = raw_frame["imageHeight"]
+                else:
+                    response = requests.get(raw_frame['imageUrl'])
+                    img = Image.open(BytesIO(response.content))
+                    imageWidth, imageHeight = img.size
+            elif self.config.parse_img_size == "firstFrame":
+                if raw_frame["frameIndex"] == 0:
+                    if "imageWidth" in raw_frame:
+                        imageWidth = raw_frame["imageWidth"]
+                        imageHeight = raw_frame["imageHeight"]
+                    else:
+                        response = requests.get(raw_frame['imageUrl'])
+                        img = Image.open(BytesIO(response.content))
+                        imageWidth, imageHeight = img.size
+                    frameImageWidth = imageWidth
+                    frameImageHeight = imageHeight
+                else:
+                    imageWidth = frameImageWidth
+                    imageHeight = frameImageHeight
+            else:
+                raise Exception(f"图像尺寸{self.config.parse_img_size} 解析模式error")
+
             frame = ImgComFrame(
                 frameId= raw_frame["frameIndex"],
                 frameUrl= raw_frame["imageUrl"],
-                imageWidth = raw_frame["imageWidth"],
-                imageHeight = raw_frame["imageHeight"],
+                imageWidth = imageWidth,
+                imageHeight = imageHeight,
                 isValid= raw_frame["valid"],
                 rotation = raw_frame["rotation"],
                 frame_attr= DotDict(raw_frame.get("attributes")) if raw_frame.get("attributes") else DotDict(),
@@ -161,13 +191,14 @@ class ImgComParse(CommonBaseMixIn):
 
 
 class ImgComDataConfig():
-    def __init__(self,parse_id_col="id",number_adpter_func=None,seq_start=0,check_order=True,overflow=False,camera="default"):
+    def __init__(self,parse_id_col="id",number_adpter_func=None,seq_start=0,check_order=True,overflow=False,camera="default",parse_img_size="default"):
         self.number_adpter_func = number_adpter_func
         self.parse_id_col = parse_id_col  # 默认id ## 暂时不引入fid,gid
         self.check_order = check_order # 检查order 是否都存在
         self.seq_start = seq_start  # 暂时用不到
         self.overflow = overflow # 默认不允许超出图像边界
         self.camera = camera
+        self.parse_img_size = parse_img_size #支持三种模式  default:从平台取   firstFrame:取首帧  imageIO:实时在线读取
 
 
 
