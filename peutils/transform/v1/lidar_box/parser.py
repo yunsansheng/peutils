@@ -385,7 +385,8 @@ class LidarBoxParse(CommonBaseMixIn):
                     frame_attr=frame_attr,
                     items=[],
                     images=[],
-                    config=self.config
+                    config=self.config,
+                    base_url=self.raw_data["baseUrl"]
                 )
             else:
                 frame = LidarBoxFrame(

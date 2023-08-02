@@ -10,6 +10,7 @@ Change History:
 '''
 import numpy as np
 import plyfile
+from peutils.pcd_py3 import point_cloud_from_path
 from pypcd import pypcd
 
 
@@ -56,3 +57,20 @@ def merge_pcds(pcd_paths):
 
     result_pc = pypcd.PointCloud(metadata, new_pc_data)
     return result_pc
+
+
+def convert_pcd(pcd_path: str, calibration: list):
+    # calibration = [-0.031411579470372014, -0.9993558406098698, -0.017447904095204192, -0.0699976997537005,
+    #                -0.004685153654105046, 0.017607980740519055, -0.9998338768362586, -0.33002570442139434,
+    #                0.9994982387382582, -0.03131460776519021, -0.005233599397279213, -0.2500102660427299,
+    #                0.0, 0.0, 0.0, 1.0]
+    calibration_matrix = np.array(calibration).reshape(4, 4)
+    pc = point_cloud_from_path(pcd_path)
+    for p in pc.pc_data:
+        multi = np.dot(
+            calibration_matrix, np.array([p["x"], p["y"], p["z"], 1])
+        )
+        p["x"] = multi[0]
+        p["y"] = multi[1]
+        p["z"] = multi[2]
+    return pc
