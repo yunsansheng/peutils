@@ -405,6 +405,7 @@ class ImgInstance():
                     "shape": item.shape,
                     "order": item.order,
                     "attributes": item.img_attr,
+                    "layer": item.layer
                 }
                 if item.isOCR is not None:
                     pre_item["isOCR"] = item.isOCR
