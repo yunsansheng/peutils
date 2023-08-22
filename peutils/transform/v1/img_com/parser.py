@@ -63,9 +63,12 @@ class ImgComParse(CommonBaseMixIn):
 
     ### 继承session属性 用来读取url
     def __init__(self,url,config):
-        self.url = url
         self.config = config
-        self.raw_data = self.get_raw_data(url) # 获取JSON字典数据数据
+        self.url = url
+        if self.config.use_oss == False:
+            self.raw_data = self.get_raw_data(url) # 获取JSON字典数据数据
+        else:
+            self.raw_data = self.get_oss_data(url)
 
         self.cameras_lst = [x["camera"] for x in self.raw_data["frames"]]  # 所有镜头名称
 
@@ -191,7 +194,7 @@ class ImgComParse(CommonBaseMixIn):
 
 
 class ImgComDataConfig():
-    def __init__(self,parse_id_col="id",number_adpter_func=None,seq_start=0,check_order=True,overflow=False,camera="default",parse_img_size="default"):
+    def __init__(self,parse_id_col="id",number_adpter_func=None,seq_start=0,check_order=True,overflow=False,camera="default",parse_img_size="default",use_oss=False):
         self.number_adpter_func = number_adpter_func
         self.parse_id_col = parse_id_col  # 默认id ## 暂时不引入fid,gid
         self.check_order = check_order # 检查order 是否都存在
@@ -199,6 +202,7 @@ class ImgComDataConfig():
         self.overflow = overflow # 默认不允许超出图像边界
         self.camera = camera
         self.parse_img_size = parse_img_size #支持三种模式  default:从平台取   firstFrame:取首帧  imageIO:实时在线读取
+        self.use_oss = use_oss # False,不走oss, True 从OSS使用sdk的方式读取数据，在大文件的情况下推荐这种方式,注意只读平台tool-prod的数据
 
 
 

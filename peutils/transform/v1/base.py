@@ -15,6 +15,10 @@ import inspect
 import json
 from peutils.textutil import gen_uuid
 from typing import Dict, List, Union
+import oss2
+import os
+import json
+
 
 
 class DotDict(dict):
@@ -590,6 +594,17 @@ class CommonBaseMixIn():
     def get_raw_data(self, url):
         rs = self.session.get(url).json()
         return rs
+
+    def get_oss_data(self,url):
+        auth = oss2.Auth(os.get_env("PE_OSS_AK"), os.get_env("PE_OSS_SK"))
+        bucket = oss2.Bucket(auth, "http://oss-cn-hangzhou.aliyuncs.com", "tool-prod")
+        if url.startswith("https://oss-prd.appen.com.cn:9001/tool-prod/") == False:
+            raise Exception("请检查annotation数据路径")
+        else:
+            oss_key = url.split("https://oss-prd.appen.com.cn:9001/tool-prod/")[1]
+            rs = json.loads(bucket.get_object(oss_key).read())
+            return rs
+
 
 
 import math
