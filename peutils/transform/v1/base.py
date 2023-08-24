@@ -281,7 +281,8 @@ class Lidar3dPolygonObj():
             "number": self.number,
             "category": self.category,
             "vertices": self.vertices,
-            "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
+            # "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
+            "labels": json.dumps(self.lidar_attr, ensure_ascii=False) if self.lidar_attr else "",
         }
         return _data_dict
 
@@ -337,7 +338,8 @@ class Lidar3dImageRect():
             "category": self.category,
             "position": self.position,
             "dimension": self.dimension,
-            "labels": "" if self.img_attr else json.dumps(self.img_attr, ensure_ascii=False),
+            # "labels": "" if self.img_attr else json.dumps(self.img_attr, ensure_ascii=False),
+            "labels": json.dumps(self.img_attr, ensure_ascii=False) if self.img_attr else "",
         }
         if self.type == "VANISH_CUBE":
             if self.points is None:
@@ -580,7 +582,8 @@ class LidarPointPolyline():
             "number": self.number,
             "category": self.category,
             "points": self.points,
-            "labels": "" if self.img_attr is None else json.dumps(self.img_attr, ensure_ascii=False),
+            # "labels": "" if self.img_attr is None else json.dumps(self.img_attr, ensure_ascii=False),
+            "labels": json.dumps(self.img_attr, ensure_ascii=False) if self.img_attr is None else "",
         }
         return _data_dict
 
