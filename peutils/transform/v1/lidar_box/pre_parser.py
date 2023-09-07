@@ -96,6 +96,10 @@ class LidarBoxPre():
             img_obj.to_dict()
         )
 
+    def add_frame_obj(self, frameNum, **kwargs):
+        # 指定帧数预处理"帧属性"、"(非)关键帧"···等
+        self.frame_list[frameNum].update(**kwargs)
+
     def dumps_data(self):
         out_dict = {
             "frames":self.frame_list
