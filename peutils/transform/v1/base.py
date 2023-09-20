@@ -601,12 +601,17 @@ class CommonBaseMixIn():
     def get_oss_data(self,url):
         auth = oss2.Auth(os.getenv("PE_OSS_AK"), os.getenv("PE_OSS_SK"))
         bucket = oss2.Bucket(auth, "http://oss-cn-hangzhou.aliyuncs.com", "tool-prod")
-        if url.startswith("https://oss-prd.appen.com.cn:9001/tool-prod/") == False:
-            raise Exception("请检查annotation数据路径")
-        else:
+        if url.startswith("https://oss-prd.appen.com.cn:9001/tool-prod/"):
             oss_key = url.split("https://oss-prd.appen.com.cn:9001/tool-prod/")[1]
             rs = json.loads(bucket.get_object(oss_key).read())
             return rs
+        elif url.startswith("https://tool-prod.oss-cn-hangzhou.aliyuncs.com"):
+            oss_key = url.split("https://tool-prod.oss-cn-hangzhou.aliyuncs.com")[1]
+            rs = json.loads(bucket.get_object(oss_key).read())
+            return rs
+        else:
+            raise Exception("请检查annotation数据路径")
+
 
 
 
