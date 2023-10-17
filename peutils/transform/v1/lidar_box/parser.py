@@ -410,7 +410,7 @@ class LidarBoxParse(CommonBaseMixIn):
 class LidarBoxDataConfig():
     def __init__(self, yaw_only=True, has_pointCount=True, number_adpter_func=None,
                  parse_id_col="id", seq_start=0, overflow=False, has_ignore_frame=False,
-                 filter_frame=None, key_frames=None, cam_parse_mode=None
+                 cam_parse_mode="manifest_parse", filter_frame=None, key_frames=None
                  ):
         # has_ignore_frame 如果是True的时候，那么图片的宽高和和isvalid可以为空
         # filter_frame 默认None odd 奇数 even 偶数
