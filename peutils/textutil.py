@@ -8,11 +8,19 @@ Short Description:
 Change History:
 
 '''
+import base64
+import json
 def gen_uuid():
     import uuid
     uid = str(uuid.uuid4())
     suid = ''.join(uid.split('-'))
     return suid
+
+def parse_info_from_token(token):
+    byte_string = base64.b64decode(token)
+    normal_string = byte_string.decode()
+    data_dict = json.loads(normal_string)
+    return data_dict
 
 
 def md5_file(filename):
