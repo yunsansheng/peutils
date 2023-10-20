@@ -21,8 +21,9 @@ class LidarManifestParse(CommonBaseMixIn):
 
     ### 继承session属性 用来读取url
     def __init__(self,base_url,config):
-        # self.raw_data = self.get_raw_data(os.path.join(base_url,"manifest.json"))
-        self.raw_data = self.get_raw_data(base_url + "/manifest.json")
+        base_url = os.path.join(base_url, "manifest.json").replace('\\', '/')
+        self.raw_data = self.get_raw_data(base_url)
+        # self.raw_data = self.get_raw_data(base_url + "/manifest.json")
         self.config = config
         self.frame_length = self.get_frame_length()
         self.camera_list = self.get_camera_list()
