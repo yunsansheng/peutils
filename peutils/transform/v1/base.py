@@ -182,7 +182,7 @@ class ErrorMsgLogV1():
                         "category":obj.category,
                         "number":obj.number
                     }
-                elif isinstance(obj,Lidar3dImageRect) or isinstance(obj,LidarPointPolyline):
+                elif isinstance(obj,Lidar3dImageRect) or isinstance(obj,LidarPointPolyline) or isinstance(obj,Lidar3dCamCube):
                     info = {
                         "type":"cast",
                         "id":obj.id,
@@ -260,6 +260,43 @@ class Lidar3dObj():
         }
         return _data_dict
 
+class Lidar3dCamCube():
+    def __init__(self, frameNum, id, number, category, position, dimension, rotation=None, rotation2=None,
+                 camCubeAttr=None, quaternion=None, pointCount=None, vertices=None, type=None, imageNum=None):
+        self.frameNum = frameNum
+        self.imageNum = imageNum
+        self.id = id
+        self.number = number
+        self.category = category
+        self.position = DotDict(position)
+        self.rotation = DotDict(rotation) if rotation else DotDict()
+        self.rotation2 = DotDict(rotation2) if rotation2 else DotDict()
+        self.dimension = DotDict(dimension)
+
+        self.camCubeAttr = DotDict(camCubeAttr) if camCubeAttr else DotDict()  # 属性
+        self.quaternion = DotDict(quaternion) if quaternion else DotDict()
+        self.pointCount = pointCount
+        self.vertices = vertices
+        self.type = type
+
+    def __repr__(self):
+        return f"{self.id} {self.category} {self.number}"
+
+    def to_dict(self):
+        _data_dict = {
+            "frameNum": self.frameNum,
+            "id": self.id,
+            "number": self.number,
+            "category": self.category,
+            "position": self.position,
+            "rotation": self.rotation if self.rotation else None,
+            "rotation2": self.rotation2 if self.rotation2 else None,
+            "quaternion": self.quaternion if self.quaternion else None,
+            "dimension": self.dimension,
+            # "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
+            "labels": json.dumps(self.camCubeAttr, ensure_ascii=False) if self.camCubeAttr else "",
+        }
+        return _data_dict
 
 class Lidar3dPolygonObj():
     def __init__(self, frameNum, id, number, category, lidar_attr=None, vertices=None, type=None):

@@ -40,7 +40,7 @@ class LidarBoxFrame(CommonBaseMixIn):
 
         self.frame_attr = frame_attr
         self.lidar_dict, self.polygon_dict = self.get_lidar_dict(items)
-        self.camera_list, self.camera_meta, self.images_dict, self.images_list = self.get_images_dict(images)
+        self.camera_list, self.camera_meta, self.images_dict, self.images_list, self.camera_cubes_dict, self.camera_cubes_list = self.get_images_dict(images)
         self._img_idset = self.get_img_idset(self.images_dict)
         self.only_lidar_idset = self.lidar_dict.keys() - self._img_idset  # 只有3D 没有出现在2D的ID
         self.only_image_idset = self._img_idset - self.lidar_dict.keys()  # 只出现在2D没有出现在3D中的ID
@@ -215,6 +215,47 @@ class LidarBoxFrame(CommonBaseMixIn):
 
         return key, img_obj
 
+    def parse_cam_cube_by_item(self, item, img_idx):
+        '''
+            解析辅助框
+        '''
+
+        rotation = dict_adapter(item["rotation"], out_adapter=self.config.number_adpter_func)
+        rotation2 = dict_adapter(item["rotation2"], out_adapter=self.config.number_adpter_func)
+        position = dict_adapter(item["position"], out_adapter=self.config.number_adpter_func)
+        dimension = dict_adapter(item["dimension"], out_adapter=self.config.number_adpter_func)
+        ## 四元数
+        quaternion = dict_adapter(item["quaternion"], out_adapter=self.config.number_adpter_func)
+        ## 辅助框没有点云
+        pointCount = None
+
+        cam_cube_obj = Lidar3dCamCube(
+            frameNum=self.frameId,  # item["frameNum"],
+            imageNum=img_idx,
+            id=item["id"],
+            number=item["number"],
+            category=item["category"],
+            position=position,
+            rotation=rotation,
+            rotation2=rotation2,
+            dimension=dimension,
+            quaternion=quaternion,
+            camCubeAttr=json.loads(item["labels"]) if item.get("labels") else dict(),
+            pointCount=pointCount,
+            type="cameraCube"
+        )
+
+        if self.config.parse_id_col == "id":
+            key = item["id"]
+        elif self.config.parse_id_col == "number":
+            key = item["number"]
+        elif self.config.parse_id_col in ("gid", "fid"):
+            key = self.config.seq_func(item["id"])
+        else:
+            raise Exception("parse_id_col解析模式错误")
+
+        return key, cam_cube_obj
+
     def get_lidar_dict(self, items):
         lidar_dict = dict()
         polygon_dict = dict()
@@ -255,12 +296,29 @@ class LidarBoxFrame(CommonBaseMixIn):
             raise Exception(f"{self.config.parse_id_col} 解析模式下数量不等，请检查使用参数")
         return single_image_dict
 
+    def get_single_camera_cubes_dict(self, camera_cubes, img_idx):
+        single_camera_cube_dict = dict()
+
+        for camera_cube in camera_cubes:
+            if camera_cube["type"] in {"cameraCube"}:
+                key, cam_cube_obj = self.parse_cam_cube_by_item(camera_cube, img_idx)
+                single_camera_cube_dict[key] = cam_cube_obj
+            else:
+                raise Exception("目前辅助框物体仅支持cameraCube,其他类型还在开发中")
+
+        if len(camera_cubes) != len(single_camera_cube_dict):
+            raise Exception(f"{self.config.parse_id_col} 解析模式下数量不等，请检查使用参数")
+        return single_camera_cube_dict
+
     def get_images_dict(self, images):
         ### 先解析出镜头数量
         images_dict = dict()  # {cam:dict1,cam2:dict2,...}
         images_list = []  # [dict1,dict2,..]
         camera_list = []
         camera_meta = dict()
+
+        camera_cubes_dict = dict()
+        camera_cubes_list = []
 
         if self.config.cam_parse_mode == "manifest_parse":
             mfst_data = LidarManifestParse(self.base_url, config=LidarManifestConfig())
@@ -319,11 +377,16 @@ class LidarBoxFrame(CommonBaseMixIn):
             images_dict[camera_name] = sg_img_dict
             images_list.append(sg_img_dict)
 
+            if img.get("cameraCubes"):
+                sg_camera_cube_dict = self.get_single_camera_cubes_dict(img["cameraCubes"], img_idx=idx)
+                camera_cubes_dict[camera_name] = sg_camera_cube_dict
+                camera_cubes_list.append(sg_img_dict)
+
         ## check
         if len(camera_list) != len(images):
             raise Exception("找到的镜头数量和原始不一致")
 
-        return camera_list, camera_meta, images_dict, images_list
+        return camera_list, camera_meta, images_dict, images_list, camera_cubes_dict, camera_cubes_list
 
     def __repr__(self):
         return f'Frame {self.frameId}'
