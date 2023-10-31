@@ -39,7 +39,7 @@ class LidarBoxFrame(CommonBaseMixIn):
             self.config.seq_func = gen_uuid_seq(start=self.config.seq_start)
 
         self.frame_attr = frame_attr
-        self.lidar_dict, self.polygon_dict = self.get_lidar_dict(items)
+        self.lidar_dict, self.polygon_dict, self.polyline_dict = self.get_lidar_dict(items)
         self.camera_list, self.camera_meta, self.images_dict, self.images_list, self.camera_cubes_dict, self.camera_cubes_list = self.get_images_dict(images)
         self._img_idset = self.get_img_idset(self.images_dict)
         self.only_lidar_idset = self.lidar_dict.keys() - self._img_idset  # 只有3D 没有出现在2D的ID
@@ -314,7 +314,7 @@ class LidarBoxFrame(CommonBaseMixIn):
         if polyline_count != len(polyline_dict):
             raise Exception(f"{self.config.parse_id_col} 解析模式下polyline数量不等，请检查使用参数")
 
-        return lidar_dict, polygon_dict,polyline_dict
+        return lidar_dict, polygon_dict, polyline_dict
 
     def get_single_image_dict(self, items, width, height, img_idx):
         single_image_dict = dict()
