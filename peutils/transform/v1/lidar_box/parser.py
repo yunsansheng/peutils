@@ -157,6 +157,32 @@ class LidarBoxFrame(CommonBaseMixIn):
 
         return key, polygon_obj
 
+    def parse_polyline_by_item(self, item):
+        polyline_obj = Lidar3dPolylineObj(
+            frameNum=self.frameId,  # item["frameNum"],
+            id=item["id"],
+            number=item["number"],
+            category=item["category"],
+            interpolated=item["interpolated"],
+            reviewKey=item['reviewKey'],
+            pointCount=item['pointCount'],
+            labelsObj=item['labelsObj'],
+            lidar_attr=json.loads(item["labels"]) if item.get("labels") else dict(),
+            vertices=item.get("vertices"),
+            type=item['type']
+        )
+
+        if self.config.parse_id_col == "id":
+            key = item["id"]
+        elif self.config.parse_id_col == "number":
+            key = item["number"]
+        elif self.config.parse_id_col in ("gid", "fid"):
+            key = self.config.seq_func(item["id"])
+        else:
+            raise Exception("parse_id_col解析模式错误")
+
+        return key, polyline_obj
+
     def parse_img_by_item(self, item, width, height, img_idx):
 
         position = dict_adapter(item["position"], out_adapter=self.config.number_adpter_func)
@@ -259,6 +285,8 @@ class LidarBoxFrame(CommonBaseMixIn):
     def get_lidar_dict(self, items):
         lidar_dict = dict()
         polygon_dict = dict()
+        polyline_dict = dict()
+        polyline_count = 0
         lidar_count = 0
         polygon_count = 0
 
@@ -272,6 +300,10 @@ class LidarBoxFrame(CommonBaseMixIn):
                 key, polygon_obj = self.parse_polygon_by_item(item=item)
                 polygon_dict[key] = polygon_obj
                 polygon_count += 1
+            elif box_type == "polyline":
+                key, polyline_obj = self.parse_polyline_by_item(item=item)
+                polyline_dict[key] = polyline_obj
+                polyline_count += 1
             else:
                 raise Exception("未知的3D类型", box_type)
 
@@ -279,8 +311,10 @@ class LidarBoxFrame(CommonBaseMixIn):
             raise Exception(f"{self.config.parse_id_col} 解析模式下lidar数量不等，请检查使用参数")
         if polygon_count != len(polygon_dict):
             raise Exception(f"{self.config.parse_id_col} 解析模式下polygon数量不等，请检查使用参数")
+        if polyline_count != len(polyline_dict):
+            raise Exception(f"{self.config.parse_id_col} 解析模式下polyline数量不等，请检查使用参数")
 
-        return lidar_dict, polygon_dict
+        return lidar_dict, polygon_dict,polyline_dict
 
     def get_single_image_dict(self, items, width, height, img_idx):
         single_image_dict = dict()
