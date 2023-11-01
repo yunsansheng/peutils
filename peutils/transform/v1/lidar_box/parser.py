@@ -166,7 +166,7 @@ class LidarBoxFrame(CommonBaseMixIn):
             interpolated=item["interpolated"],
             reviewKey=item['reviewKey'],
             pointCount=item['pointCount'],
-            labelsObj=item['labelsObj'],
+            labelsObj=item['labelsObj'] if 'labelsObj' in item else None,
             lidar_attr=json.loads(item["labels"]) if item.get("labels") else dict(),
             vertices=item.get("vertices"),
             type=item['type']

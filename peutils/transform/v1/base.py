@@ -175,14 +175,14 @@ class ErrorMsgLogV1():
                         "instanceId": obj.instance.id,
                         "instanceItemId": obj.id
                     }
-                elif isinstance(obj,Lidar3dObj) or isinstance(obj,Lidar3dPolygonObj) or isinstance(obj,LidarPointObj):
+                elif isinstance(obj,Lidar3dObj) or isinstance(obj,Lidar3dPolygonObj) or isinstance(obj,LidarPointObj) or isinstance(obj,Lidar3dCamCube):
                     info = {
                         "type": "cube",
                         "id":obj.id,
                         "category":obj.category,
                         "number":obj.number
                     }
-                elif isinstance(obj,Lidar3dImageRect) or isinstance(obj,LidarPointPolyline) or isinstance(obj,Lidar3dCamCube):
+                elif isinstance(obj,Lidar3dImageRect) or isinstance(obj,LidarPointPolyline):
                     info = {
                         "type":"cast",
                         "id":obj.id,
