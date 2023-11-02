@@ -9,7 +9,7 @@ Change History:
 
 """
 
-from textutil import get_device_sn,parse_info_from_token
+from peutils.textutil import get_device_sn,parse_info_from_token
 import platform
 import requests
 import warnings
