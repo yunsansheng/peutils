@@ -10,6 +10,10 @@ Change History:
 '''
 import base64
 import json
+import subprocess
+import platform
+
+
 def gen_uuid():
     import uuid
     uid = str(uuid.uuid4())
@@ -52,8 +56,25 @@ def gen_date_str(sep='std'):
         raise Exception('sep not definded.')
 
 
-### 去掉前后空格，多个空格变成一个空格
+# 去掉前后空格，多个空格变成一个空格
 def strip_and_replace_blank(text):
     import re
     newtext = re.sub(' +',' ',text).strip()
     return newtext
+
+def get_device_sn():
+    sys_kind = platform.system()
+    if sys_kind == "Darwin":
+        cmd = 'ioreg -l | grep IOPlatformSerialNumber'
+        result = subprocess.check_output(cmd, shell=True).decode('utf-8')
+        serial_number = result.split(' ')[-1].strip('\n').strip('"')
+    elif sys_kind == 'Windows':
+        cmd = 'wmic bios get serialnumber'
+        result = subprocess.check_output(cmd, shell=True).decode('utf-8')
+        serial_number = result.split('\n')[1].strip()
+    else:
+        raise Exception(f"unknow system kind:{sys_kind}")
+    return serial_number
+
+
+
