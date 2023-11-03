@@ -24,8 +24,10 @@ import os
 sys_kind = platform.system()
 
 
+
+
 # 权限re_up或者read
-def get_oss_auth_str(oss_path,auth_type="read"):
+def get_oss_auth_str(oss_path,auth_type="read",is_print=True):
     headers = {
         'Content-Type': 'application/json'
     }
@@ -51,8 +53,9 @@ def get_oss_auth_str(oss_path,auth_type="read"):
         else:
             data = r.json()
             auth_str = data["data"]["auth_str"]
-            print(f"请复制下方的授权码，使用oss登陆,授权码将在12小时后过期，请尽快使用!")
-            print(auth_str)
+            if is_print is True:
+                print(f"请复制下方的授权码，使用oss登陆,授权码将在12小时后过期，请尽快使用!")
+                print(auth_str)
             # auth_dict = parse_info_from_token(auth_str)
             return auth_str
 
@@ -63,7 +66,7 @@ def get_oss_auth_str(oss_path,auth_type="read"):
 class OSS_STS_API():
     def __init__(self,bucket_name, time_out=60,region=None):
         oss_path = f"oss://{bucket_name}/"
-        auth_dict = parse_info_from_token(get_oss_auth_str(oss_path,auth_type="re_up"))
+        auth_dict = parse_info_from_token(get_oss_auth_str(oss_path,auth_type="re_up",is_print=False))
         self.bucket_name = bucket_name
         self.auth = oss2.StsAuth(auth_dict["id"], auth_dict["secret"],auth_dict["stoken"])
 
@@ -259,13 +262,3 @@ class OSS_STS_API():
         assert dest_object_size == total_size
 
         return result.status
-
-
-# oss_obj = OSS_STS_API(bucket_name="appen-data")
-# print(oss_obj.list_bucket_current(oss_path="ziz0913/",list_type='folder'))
-#
-# oss_obj = OSS_STS_API(bucket_name="projecteng")
-# print(oss_obj.list_bucket_current(oss_path="haomo_3d/",list_type='folder'))
-
-
-# print(get_oss_auth_info("oss://test-data-ap/"))
