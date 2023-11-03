@@ -25,7 +25,7 @@ sys_kind = platform.system()
 
 
 # 权限re_up或者read
-def get_oss_auth_info(oss_path,auth_type="re_up"):
+def get_oss_auth_str(oss_path,auth_type="read"):
     headers = {
         'Content-Type': 'application/json'
     }
@@ -51,8 +51,8 @@ def get_oss_auth_info(oss_path,auth_type="re_up"):
         else:
             data = r.json()
             auth_str = data["data"]["auth_str"]
-            auth_dict = parse_info_from_token(auth_str)
-            return auth_dict
+            # auth_dict = parse_info_from_token(auth_str)
+            return auth_str
 
     except Exception as e:
         raise Exception(f"授权接口调用异常，请稍后重试!{e}")
