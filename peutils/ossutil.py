@@ -63,7 +63,7 @@ def get_oss_auth_str(oss_path,auth_type="read"):
 class OSS_STS_API():
     def __init__(self,bucket_name, time_out=60,region=None):
         oss_path = f"oss://{bucket_name}/"
-        auth_dict = get_oss_auth_info(oss_path)
+        auth_dict = parse_info_from_token(get_oss_auth_str(oss_path,auth_type="re_up"))
         self.bucket_name = bucket_name
         self.auth = oss2.StsAuth(auth_dict["id"], auth_dict["secret"],auth_dict["stoken"])
 
