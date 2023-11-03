@@ -51,6 +51,8 @@ def get_oss_auth_str(oss_path,auth_type="read"):
         else:
             data = r.json()
             auth_str = data["data"]["auth_str"]
+            print(f"请复制下方的授权码，使用oss登陆,授权码将在12小时后过期，请尽快使用!")
+            print(auth_str)
             # auth_dict = parse_info_from_token(auth_str)
             return auth_str
 
