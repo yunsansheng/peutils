@@ -69,6 +69,7 @@ class OSS_STS_API():
         auth_dict = parse_info_from_token(get_oss_auth_str(oss_path,auth_type="re_up",is_print=False))
         self.bucket_name = bucket_name
         self.auth = oss2.StsAuth(auth_dict["id"], auth_dict["secret"],auth_dict["stoken"])
+        self.short_region = auth_dict['region'] # 比如 oss-cn-shanghai
 
         # 未指定region情况下，根据操作系统来默认
         if region is None:
