@@ -266,7 +266,8 @@ class LidarBoxFrame(CommonBaseMixIn):
             rotation2=rotation2,
             dimension=dimension,
             quaternion=quaternion,
-            camCubeAttr=json.loads(item["labels"]) if item.get("labels") else dict(),
+            # camCubeAttr=json.loads(item["labels"]) if item.get("labels") else dict(),
+            camCubeAttr=item["labels"] if item.get("labels") else dict(),
             pointCount=pointCount,
             type="cameraCube"
         )

@@ -294,7 +294,9 @@ class Lidar3dCamCube():
             "quaternion": self.quaternion if self.quaternion else None,
             "dimension": self.dimension,
             # "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
-            "labels": json.dumps(self.camCubeAttr, ensure_ascii=False) if self.camCubeAttr else "",
+            # "labels": json.dumps(self.camCubeAttr, ensure_ascii=False) if self.camCubeAttr else "",
+            # 注意CamCube的labels是dict类型
+            "labels": self.camCubeAttr if self.camCubeAttr else dict(),
         }
         return _data_dict
 
