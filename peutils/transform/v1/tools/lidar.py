@@ -315,7 +315,7 @@ def draw_line(img, pts_int, color=(255, 255, 0), thickness=1):
     cv2.line(img, pts_int[3], pts_int[6], color, thickness)
 
 
-def point_to_img2(img_path, lidar_items, **kwargs):
+def point_to_img2(img_path, lidar_items, external_arr, internal_arr, **kwargs):
     from pathlib import Path
 
     model = kwargs.get("model", "pinhole")
@@ -325,9 +325,8 @@ def point_to_img2(img_path, lidar_items, **kwargs):
     point_color = kwargs.get("point_color", (0, 255, 0))  # BGR
     thickness = kwargs.get("thickness", 1)
 
-    save_path = kwargs.get("save_path", None)  # img写入保存路径，默认不报错，imshow预览效果
-    if save_path is not None:
-        assert Path(save_path).suffix[0] == ".", "save_path保存路径必须指定文件"
+    save_path = kwargs.get("save_path", Path(img_path).name)  # img写入保存路径，默认不报错，imshow预览效果
+    assert Path(save_path).suffix[0] == ".", "save_path保存路径必须指定文件"
 
     background = kwargs.get("background", False)
     img_w = kwargs.get("img_w", None)
@@ -341,7 +340,7 @@ def point_to_img2(img_path, lidar_items, **kwargs):
         for item in lidar_items:
             image_pos8 = lidar_item_to_image_pos8(
                 position=item["position"], dimension=item["dimension"], quaternion=item["quaternion"],
-                external_arr=reflect_t, internal_arr=reflect_p, model=model, axis=axis, adapter=adapter
+                external_arr=external_arr, internal_arr=internal_arr, model=model, axis=axis, adapter=adapter
             )
             image_pos8_list.append(image_pos8)
         # 左右上下都加同样的expand
@@ -360,69 +359,65 @@ def point_to_img2(img_path, lidar_items, **kwargs):
             # 点也要加expand
             draw_line(img=img_max, pts_int=[(p[0] + expand, p[1] + expand) for p in img_p8], color=point_color, thickness=thickness)
 
-        if save_path:
-            cv2.imwrite(save_path, img_max)  # 最后输出时，保留边缘的黑布。不保留和cv2直接绘制效果一样，可以background=True即可
-        else:
-            cv2.imshow('Lidar2Image', img_max)
-            cv2.waitKey()
+        cv2.imwrite(save_path, img_max)  # 最后输出时，保留边缘的黑布。不保留和cv2直接绘制效果一样，可以background=True即可
+        # cv2.imshow('Lidar2Image', img_max)
+        # cv2.waitKey()
     else:
         for item in lidar_items:
             image_pos8 = lidar_item_to_image_pos8(
                 position=item["position"], dimension=item["dimension"], quaternion=item["quaternion"],
-                external_arr=reflect_t, internal_arr=reflect_p, model=model, axis=axis, adapter=adapter
+                external_arr=external_arr, internal_arr=internal_arr, model=model, axis=axis, adapter=adapter
             )
             draw_line(img=img, pts_int=image_pos8, color=point_color, thickness=thickness)
-        if save_path:
-            cv2.imwrite(save_path, img)  # 不保留，和cv2直接绘制效果一样
-        else:
-            cv2.imshow('Lidar2Image', img)
-            cv2.waitKey()
+        cv2.imwrite(save_path, img)  # 不保留，和cv2直接绘制效果一样
+        # cv2.imshow('Lidar2Image', img)
+        # cv2.waitKey()
 
 
 if __name__ == '__main__':
-    #### 平台的内参是p, 外参是t, 以下以wz为例
-    reflect_t = [
-        [0.013008662021065768, -0.9998308106509982, 0.013004798552426648, -0.08963269786502702],
-        [-0.16855299625924877, -0.015012435684566009, -0.9855782638770227, -0.23169931343217604],
-        [0.9856067482340263, 0.010629056768325538, -0.16871977058947302, -0.5035080012889495],
-        [0, 0, 0, 1]
-    ]  # 外参
-    reflect_p = [[990.3901353092, 0, 920.7098863878875, 0], [0, 990.3616928331, 518.2222635023165, 0], [0, 0, 1, 0]]  # 内参
-
-    cameraCubes = [
-        {  # 正常框
-            "position": {"x": 3.5267498892287588, "y": 4.913005481472807, "z": -1.924160699171428},
-            "dimension": {"x": 3.5, "y": 1.5, "z": 1.5},
-            "quaternion": {"x": 0, "y": 0, "z": -0.9893870638906137, "w": 0.14530394972577523}
-        },
-        {  # 存在截断的框
-            "position": {"x": -0.1701175599364254, "y": 0.09766359990450012, "z": -1.6868215081515596},
-            "dimension": {"x": 3.5, "y": 1.5, "z": 1.5},
-            "quaternion": {"x": 0, "y": 0, "z": 0.06819077841201075, "w": 0.9976722997756147}
-        }
-    ]
-    # test 截断框
-    lidarVeters = get_abs_cube_points_list(position=cameraCubes[1]["position"], dimension=cameraCubes[1]["dimension"], quaternion=cameraCubes[1]["quaternion"], axis="pe")
-    print(f"get_abs_cube_points_list: {lidarVeters}\n")
-
-    cameraPos = lidar_pos_to_camera_pos(lidar_pos=lidarVeters[0], external_arr=reflect_t)
-    print(f"lidar_pos_to_camera_pos: {cameraPos}\n")
-
-    imagePos = camera_pos_to_image_loc(camera_pos=cameraPos, internal_arr=reflect_p, adapter=None, model="pinhole")
-    print(f"camera_pos_to_image_loc: {imagePos}\n")
-
-    cameraPos1 = lidar_pos_to_camera_loc(lidar_pos=lidarVeters[0], internal_arr=reflect_p, external_arr=reflect_t, adapter=None, model="pinhole")
-    print(f"lidar_pos_to_camera_loc: {cameraPos1}\n")
-
-    cameraPos_z1 = camera_pos8_truncated_to_z1(camera_pos8=[lidar_pos_to_camera_pos(lidar_pos=p, external_arr=reflect_t) for p in lidarVeters], axis="pe")
-    print(f"camera_pos8_truncated_to_z1: {cameraPos_z1}\n")
-
-    imagePos8 = lidar_item_to_image_pos8(position=cameraCubes[1]["position"], dimension=cameraCubes[1]["dimension"], quaternion=cameraCubes[1]["quaternion"], internal_arr=reflect_p, external_arr=reflect_t)
-    print(f"lidar_item_to_image_pos8: {imagePos8}\n")
-
-    point_to_img2(
-        img_path=f"/Users/echai/Downloads/1677983341595289344.jpg",
-        lidar_items=cameraCubes, axis="a9",
-        background=False, img_w=1080, img_h=1920,
-        save_path=f"/Users/echai/Downloads/1677983341595289344_new.jpg"
-    )
+    pass
+    # #### 平台的内参是p, 外参是t, 以下以wz为例
+    # reflect_t = [
+    #     [0.013008662021065768, -0.9998308106509982, 0.013004798552426648, -0.08963269786502702],
+    #     [-0.16855299625924877, -0.015012435684566009, -0.9855782638770227, -0.23169931343217604],
+    #     [0.9856067482340263, 0.010629056768325538, -0.16871977058947302, -0.5035080012889495],
+    #     [0, 0, 0, 1]
+    # ]  # 外参
+    # reflect_p = [[990.3901353092, 0, 920.7098863878875, 0], [0, 990.3616928331, 518.2222635023165, 0], [0, 0, 1, 0]]  # 内参
+    #
+    # cameraCubes = [
+    #     {  # 正常框
+    #         "position": {"x": 3.5267498892287588, "y": 4.913005481472807, "z": -1.924160699171428},
+    #         "dimension": {"x": 3.5, "y": 1.5, "z": 1.5},
+    #         "quaternion": {"x": 0, "y": 0, "z": -0.9893870638906137, "w": 0.14530394972577523}
+    #     },
+    #     {  # 存在截断的框
+    #         "position": {"x": -0.1701175599364254, "y": 0.09766359990450012, "z": -1.6868215081515596},
+    #         "dimension": {"x": 3.5, "y": 1.5, "z": 1.5},
+    #         "quaternion": {"x": 0, "y": 0, "z": 0.06819077841201075, "w": 0.9976722997756147}
+    #     }
+    # ]
+    # # test 截断框
+    # lidarVeters = get_abs_cube_points_list(position=cameraCubes[1]["position"], dimension=cameraCubes[1]["dimension"], quaternion=cameraCubes[1]["quaternion"], axis="pe")
+    # print(f"get_abs_cube_points_list: {lidarVeters}\n")
+    #
+    # cameraPos = lidar_pos_to_camera_pos(lidar_pos=lidarVeters[0], external_arr=reflect_t)
+    # print(f"lidar_pos_to_camera_pos: {cameraPos}\n")
+    #
+    # imagePos = camera_pos_to_image_loc(camera_pos=cameraPos, internal_arr=reflect_p, adapter=None, model="pinhole")
+    # print(f"camera_pos_to_image_loc: {imagePos}\n")
+    #
+    # cameraPos1 = lidar_pos_to_camera_loc(lidar_pos=lidarVeters[0], internal_arr=reflect_p, external_arr=reflect_t, adapter=None, model="pinhole")
+    # print(f"lidar_pos_to_camera_loc: {cameraPos1}\n")
+    #
+    # cameraPos_z1 = camera_pos8_truncated_to_z1(camera_pos8=[lidar_pos_to_camera_pos(lidar_pos=p, external_arr=reflect_t) for p in lidarVeters], axis="pe")
+    # print(f"camera_pos8_truncated_to_z1: {cameraPos_z1}\n")
+    #
+    # imagePos8 = lidar_item_to_image_pos8(position=cameraCubes[1]["position"], dimension=cameraCubes[1]["dimension"], quaternion=cameraCubes[1]["quaternion"], internal_arr=reflect_p, external_arr=reflect_t)
+    # print(f"lidar_item_to_image_pos8: {imagePos8}\n")
+    #
+    # point_to_img2(
+    #     img_path=f"/Users/echai/Downloads/1677983341595289344.jpg",
+    #     lidar_items=cameraCubes, external_arr=reflect_t, internal_arr=reflect_p,
+    #     axis="a9", background=False, img_w=1080, img_h=1920
+    # )
