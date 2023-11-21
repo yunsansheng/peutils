@@ -144,7 +144,7 @@ class LidarPointFrame():
 
         '''
         # if item["type"] =="polyline":
-        if item["type"] in ["polyline", "polygon2"]:
+        if item["type"] in ["polyline", "polygon2", "plane3d"]:
             img_obj = LidarPointPolyline(
                 frameNum=item["frameNum"],
                 imageNum=item["imageNum"],
@@ -187,12 +187,12 @@ class LidarPointFrame():
 
         for item in items:
             # if item["type"] =="polyline":
-            if item["type"] in ["polyline", "polygon2"]:
+            if item["type"] in ["polyline", "polygon2", "plane3d"]:
                 key,img_obj = self.parse_img_by_item(item,width,height)
                 single_image_dict[key] = img_obj
             else:
                 # raise Exception("目前图像物体仅支持polyline,其他类型还在开发中")
-                raise Exception("目前图像物体仅支持polyline,polygon2,其他类型还在开发中")
+                raise Exception("目前图像物体仅支持polyline,polygon2,plane3d,其他类型还在开发中")
 
         if len(items) != len(single_image_dict):
             raise Exception(f"{self.config.parse_id_col} 解析模式下数量不等，请检查使用参数")
