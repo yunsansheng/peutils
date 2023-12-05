@@ -63,20 +63,51 @@ def get_oss_auth_str(oss_path,auth_type="read",is_print=True):
         raise Exception(f"授权接口调用异常，请稍后重试!{e}")
 
 
+def get_long_object_link(auth_str,bucket_name,file_key,duration=604800):
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    payload = {
+        "authToken": auth_str,
+        "filePath": file_key,
+        "bucketName":bucket_name,
+        "expiration":duration,
+    }
+
+    try:
+        r = requests.post(url="https://dataflow.appen.com.cn/oss_app/other/get_oss_file_url/", json=payload,headers=headers)
+        print(r.text)
+        rsp = r.json()
+        if rsp["code"] != 200:
+            raise Exception(rsp["message"])
+        else:
+            return rsp["data"]["url"]
+
+
+    except Exception as e:
+        # print(e)
+        raise Exception(f"授权接口调用异常，请稍后重试!{e}")
+
+
+
+
+
 class OSS_STS_API():
     def __init__(self,bucket_name, time_out=60,region=None):
         oss_path = f"oss://{bucket_name}/"
-        auth_dict = parse_info_from_token(get_oss_auth_str(oss_path,auth_type="re_up",is_print=False))
+        self.auth_str = get_oss_auth_str(oss_path,auth_type="re_up",is_print=False)
+        self.auth_dict = parse_info_from_token(self.auth_str)
         self.bucket_name = bucket_name
-        self.auth = oss2.StsAuth(auth_dict["id"], auth_dict["secret"],auth_dict["stoken"])
-        self.short_region = auth_dict['region'] # 比如 oss-cn-shanghai
+        self.auth = oss2.StsAuth(self.auth_dict["id"],self.auth_dict["secret"],self.auth_dict["stoken"])
+        self.short_region = self.auth_dict['region'] # 比如 oss-cn-shanghai
 
         # 未指定region情况下，根据操作系统来默认
         if region is None:
             if sys_kind == "Linux":
-                region = f"http://{auth_dict['region']}-internal.aliyuncs.com"
+                region = f"http://{self.short_region}-internal.aliyuncs.com"
             else:
-                region = f"http://{auth_dict['region']}.aliyuncs.com"
+                region = f"http://{self.short_region}.aliyuncs.com"
         else:
             region = region
 
