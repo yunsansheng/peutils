@@ -52,6 +52,8 @@ def get_oss_auth_str(oss_path,auth_type="read",is_print=True):
             raise Exception( f"{url.split('/')[-2]} 当前未开通白名单 {ip_info}")
         else:
             data = r.json()
+            if data["code"] != 200:
+                raise Exception(f"授权接口调用失败，具体原因:{data['message']}")
             auth_str = data["data"]["auth_str"]
             if is_print is True:
                 print(f"请复制下方的授权码，使用oss登陆,授权码将在12小时后过期，请尽快使用!")
