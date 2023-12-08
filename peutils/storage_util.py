@@ -144,6 +144,15 @@ class S3_API:
 
 
 # =========================================================OBS========================================================
+class ObsPath:
+    def __init__(self, obs_path):
+        obs_path = obs_path.strip()
+        assert obs_path.startswith("obs://"), "路径必须以obs://开始"
+        assert obs_path.endswith("/"), "路径必须以/结束"
+        self.bucket_name = obs_path.replace("obs://", "").split("/")[0]
+        self.obs_rel_path = "/".join(obs_path.replace("obs://", "").split("/")[1:])
+
+
 class OBS_API:
     def __init__(self, bucket_name, ak, sk, server):
         self.bucket_name = bucket_name

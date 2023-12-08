@@ -8,16 +8,28 @@ Short Description:
 Change History:
 
 '''
+from io import BytesIO
+
 import numpy as np
 import plyfile
+from peutils.transform.v1.base import get_session
+
 from peutils.pcd_py3 import point_cloud_from_path
 from pypcd import pypcd
 
 
 # common ply convert pcd tool
-def ply2pcd(ply_file_path, compression="binary"):
-    with open(ply_file_path, "rb") as ff:
-        plydata = plyfile.PlyData.read(ff)
+def ply2pcd(ply_file_path, compression="binary", mode="local"):
+    if mode == "local":
+        with open(ply_file_path, "rb") as ff:
+            plydata = plyfile.PlyData.read(ff)
+    elif mode == "http":
+        session = get_session()
+        r = session.get(ply_file_path)
+        ply_data_bytes = BytesIO(r.content)
+        plydata = plyfile.PlyData.read(ply_data_bytes)
+    else:
+        raise Exception("mode error")
 
     prop_names = [prop.name for prop in plydata["vertex"].properties]
     prop_val_dtypes = [prop.val_dtype for prop in plydata["vertex"].properties]
@@ -27,7 +39,7 @@ def ply2pcd(ply_file_path, compression="binary"):
     metadata["fields"] = prop_names
     metadata["size"] = [int(val_dtype[1]) for val_dtype in prop_val_dtypes]
     metadata["type"] = [val_dtype[0].upper() for val_dtype in prop_val_dtypes]
-    metadata["count"] = " ".join("1" * len(plydata["vertex"].properties))
+    metadata["count"] = [1] * len(plydata["vertex"].properties)
     metadata["width"] = len(plydata["vertex"])
     metadata["height"] = 1
     metadata["points"] = metadata["width"] * metadata["height"]
