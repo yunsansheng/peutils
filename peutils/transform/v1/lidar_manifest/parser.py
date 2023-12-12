@@ -8,6 +8,7 @@ Short Description:
 Change History:
 
 '''
+from urllib.parse import unquote
 
 from peutils.transform.v1.base import *
 import os
@@ -22,7 +23,9 @@ class LidarManifestParse(CommonBaseMixIn):
     ### 继承session属性 用来读取url
     def __init__(self,base_url,config):
         # base_url = os.path.join(base_url, "manifest.json").replace('\\', '/')
-        base_url = base_url if base_url.endswith("manifest.json") else os.path.join(base_url, "manifest.json").replace('\\', '/')
+        # 兼容私有化的http链接
+        if len(unquote(base_url).split("?")) == 1:
+            base_url = base_url if base_url.endswith("manifest.json") else os.path.join(base_url, "manifest.json").replace('\\', '/')
         self.raw_data = self.get_raw_data(base_url)
         # self.raw_data = self.get_raw_data(base_url + "/manifest.json")
         self.config = config
