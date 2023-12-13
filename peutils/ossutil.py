@@ -116,6 +116,20 @@ class OSS_STS_API():
         self.region= region
         self.bucket = oss2.Bucket(self.auth, region, bucket_name,connect_timeout=time_out)
 
+    def check_is_empty_oss_folder(self,oss_key):
+        assert oss_key.endswith("/") is True, "oss_key必须以/结尾"
+        assert oss_key.startswith("/") is False, "oss_key不能以/开始"
+        is_empty = True
+        count = 1
+        for obj in oss2.ObjectIterator(self.bucket, prefix=oss_key):
+            # print("key",obj.key)
+            if count > 2:
+                break
+            if obj.key != oss_key:
+                is_empty = False
+            count += 1
+
+        return is_empty
 
     def list_bucket_files_deep(self, oss_path, suffix='',with_bucket_name=False):
         ### 忽略临时文件和隐藏文件,忽略文件夹
