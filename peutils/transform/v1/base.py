@@ -258,6 +258,10 @@ class Lidar3dObj():
             # "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
             "labels": json.dumps(self.lidar_attr, ensure_ascii=False) if self.lidar_attr else "",
         }
+        if self.pointCount:
+            _data_dict["pointCount"] = {
+                "lidar": self.pointCount
+            }
         return _data_dict
 
 class Lidar3dCamCube():
