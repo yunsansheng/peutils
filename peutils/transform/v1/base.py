@@ -8,8 +8,10 @@ Short Description:
 Change History:
 
 '''
+from urllib.parse import unquote
 
 import requests
+from peutils.ossutil import OSS_STS_API
 from requests.adapters import HTTPAdapter
 import inspect
 import json
@@ -18,7 +20,6 @@ from typing import Dict, List, Union
 import oss2
 import os
 import json
-
 
 
 class DotDict(dict):
@@ -175,20 +176,22 @@ class ErrorMsgLogV1():
                         "instanceId": obj.instance.id,
                         "instanceItemId": obj.id
                     }
-                elif isinstance(obj,Lidar3dObj) or isinstance(obj,Lidar3dPolygonObj) or isinstance(obj,LidarPointObj) or isinstance(obj,Lidar3dCamCube):
+                elif isinstance(obj, Lidar3dObj) or isinstance(obj, Lidar3dPolygonObj) or isinstance(obj,
+                                                                                                     LidarPointObj) or isinstance(
+                    obj, Lidar3dCamCube):
                     info = {
                         "type": "cube",
-                        "id":obj.id,
-                        "category":obj.category,
-                        "number":obj.number
+                        "id": obj.id,
+                        "category": obj.category,
+                        "number": obj.number
                     }
-                elif isinstance(obj,Lidar3dImageRect) or isinstance(obj,LidarPointPolyline):
+                elif isinstance(obj, Lidar3dImageRect) or isinstance(obj, LidarPointPolyline):
                     info = {
-                        "type":"cast",
-                        "id":obj.id,
-                        "category":obj.category,
-                        "number":obj.number,
-                        "imageNum":obj.imageNum
+                        "type": "cast",
+                        "id": obj.id,
+                        "category": obj.category,
+                        "number": obj.number,
+                        "imageNum": obj.imageNum
                     }
 
                 # 提供的话 就不覆盖
@@ -264,6 +267,7 @@ class Lidar3dObj():
             }
         return _data_dict
 
+
 class Lidar3dCamCube():
     def __init__(self, frameNum, id, number, category, position, dimension, rotation=None, rotation2=None,
                  camCubeAttr=None, quaternion=None, pointCount=None, vertices=None, type=None, imageNum=None):
@@ -306,7 +310,8 @@ class Lidar3dCamCube():
 
 
 class Lidar3dPolylineObj():
-    def __init__(self, frameNum, id, number, category, interpolated,reviewKey,pointCount,labelsObj,lidar_attr=None, vertices=None, type=None):
+    def __init__(self, frameNum, id, number, category, interpolated, reviewKey, pointCount, labelsObj, lidar_attr=None,
+                 vertices=None, type=None):
         self.frameNum = frameNum
         self.id = id
         self.number = number
@@ -328,10 +333,10 @@ class Lidar3dPolylineObj():
             "id": self.id,
             "number": self.number,
             "category": self.category,
-            "interpolated" :self.interpolated,
-            "reviewKey" :self.reviewKey,
-            "pointCount" :self.pointCount,
-            "labelsObj" :self.labelsObj,
+            "interpolated": self.interpolated,
+            "reviewKey": self.reviewKey,
+            "pointCount": self.pointCount,
+            "labelsObj": self.labelsObj,
             "vertices": self.vertices,
             "type": self.type,
             # "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
@@ -529,7 +534,7 @@ class ImgInstance():
                     "shape": item.shape,
                     "order": item.order,
                     "attributes": item.img_attr,
-                    "layer":item.layer
+                    "layer": item.layer
                 }
                 if item.isOCR is not None:
                     pre_item["isOCR"] = item.isOCR
@@ -548,7 +553,7 @@ class Img2Dobj():
                  frameNum, id, number, category,
                  shapeType, order=None, shape=None, img_attr=None,
                  displayName="", color="",
-                 isOCR=None, OCRText=None, cam_name="default",layer=0
+                 isOCR=None, OCRText=None, cam_name="default", layer=0
                  ):
         self.instance = instance
         self.frameNum = frameNum
@@ -677,7 +682,15 @@ class CommonBaseMixIn():
         rs = self.session.get(url).json()
         return rs
 
-    def get_oss_data(self,url):
+    def get_raw_data_by_oss_api(self, url):
+        url = unquote(url).split("?")[0]
+        assert url.startswith("https://appen-data.oss-cn-shanghai.aliyuncs.com/"), "http bucket error"
+        oss_key = url.replace("https://appen-data.oss-cn-shanghai.aliyuncs.com/", "")
+        oss_api = OSS_STS_API(bucket_name="appen-data")
+        rs = json.loads(oss_api.bucket.get_object(oss_key).read())
+        return rs
+
+    def get_oss_data(self, url):
         auth = oss2.Auth(os.getenv("PE_OSS_AK"), os.getenv("PE_OSS_SK"))
         bucket = oss2.Bucket(auth, "http://oss-cn-hangzhou.aliyuncs.com", "tool-prod")
         if url.startswith("https://oss-prd.appen.com.cn:9001/tool-prod/"):
@@ -690,8 +703,6 @@ class CommonBaseMixIn():
             return rs
         else:
             raise Exception("请检查annotation数据路径")
-
-
 
 
 import math
