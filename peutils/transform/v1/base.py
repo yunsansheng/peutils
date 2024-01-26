@@ -373,7 +373,7 @@ class Lidar3dPolygonObj():
 
 class Lidar3dImageRect():
     def __init__(self, frameNum, id, number, type, category, position, dimension, imageNum=None,
-                 img_attr=None, points=None, rect1=None, rect2=None):
+                 img_attr=None, points=None, rect1=None, rect2=None,middle=None):
         '''
         VANISH_CUBE 灭点立体框才有points
         RECT_CUBE: 前后矩形框组成的立体框 只有这个才有rect1,rect2
@@ -392,7 +392,7 @@ class Lidar3dImageRect():
         self.points = points
         self.rect1 = rect1
         self.rect2 = rect2
-
+        self.middle = middle
         self.bbox = self.get_bbox()
 
     def get_bbox(self):

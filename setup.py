@@ -16,7 +16,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "peutils",
-    version = '0.0.97',
+    version = '0.0.98',
     keywords = ("pip3", "peutils",'henry'),
     description = "utils for text,audio,video,excel,file and so on.",
     long_description = "utils for text,audio,video,excel,file and so on,more details please visit gitlab.",

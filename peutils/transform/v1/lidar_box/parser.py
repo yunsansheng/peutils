@@ -40,7 +40,7 @@ class LidarBoxFrame(CommonBaseMixIn):
 
         self.frame_attr = frame_attr
         self.lidar_dict, self.polygon_dict, self.polyline_dict = self.get_lidar_dict(items)
-        self.camera_list, self.camera_meta, self.images_dict, self.images_list, self.camera_cubes_dict, self.camera_cubes_list = self.get_images_dict(images)
+        self.camera_list, self.camera_meta, self.images_dict, self.images_list, self.camera_cubes_dict, self.camera_cubes_list, self.images_point_dict = self.get_images_dict(images)
         self._img_idset = self.get_img_idset(self.images_dict)
         self.only_lidar_idset = self.lidar_dict.keys() - self._img_idset  # 只有3D 没有出现在2D的ID
         self.only_image_idset = self._img_idset - self.lidar_dict.keys()  # 只出现在2D没有出现在3D中的ID
@@ -193,18 +193,19 @@ class LidarBoxFrame(CommonBaseMixIn):
         1.图像是否超出边界外
 
         '''
-        if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE", "POLYGON_CAST"}:
+        if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE", "POLYGON_CAST" ,"POINT"}:
             points = None
             rect1 = None
             rect2 = None
-
+            middle = None
             if item["type"] in { "VANISH_CUBE","POLYGON_CAST" }:
                 points = item["points"]
 
             if item["type"] == "RECT_CUBE":
                 rect1 = item["rect1"]
                 rect2 = item["rect2"]
-
+            if item["type"] == "POINT":
+                middle = item["middle"]
             img_obj = Lidar3dImageRect(
                 frameNum=self.frameId,  # item["frameNum"],
                 imageNum=img_idx,  # item["imageNum"],
@@ -217,7 +218,8 @@ class LidarBoxFrame(CommonBaseMixIn):
                 img_attr=json.loads(item["labels"]) if item.get("labels") else dict(),
                 points=points,
                 rect1=rect1,
-                rect2=rect2
+                rect2=rect2,
+                middle = middle
             )
 
         else:
@@ -319,17 +321,22 @@ class LidarBoxFrame(CommonBaseMixIn):
 
     def get_single_image_dict(self, items, width, height, img_idx):
         single_image_dict = dict()
-
+        single_image_point_dict = defaultdict(list)
         for item in items:
             if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE","POLYGON_CAST"}:
                 key, img_obj = self.parse_img_by_item(item, width, height, img_idx)
                 single_image_dict[key] = img_obj
+            elif item["type"] == "POINT":
+                key, img_obj = self.parse_img_by_item(item, width, height, img_idx)
+                single_image_point_dict[key].append(img_obj)
             else:
                 raise Exception("目前图像物体仅支持RECT VANISH_CUBE RECT_CUBE POLYGON_CAST,其他类型还在开发中")
 
-        if len(items) != len(single_image_dict):
+        # if len(items) != len(single_image_dict):
+        #     raise Exception(f"{self.config.parse_id_col} 解析模式下数量不等，请检查使用参数")
+        if len(items) != len(single_image_dict) + len([vv for v in list(single_image_point_dict.values()) for vv in v]):
             raise Exception(f"{self.config.parse_id_col} 解析模式下数量不等，请检查使用参数")
-        return single_image_dict
+        return single_image_dict,single_image_point_dict
 
     def get_single_camera_cubes_dict(self, camera_cubes, img_idx):
         single_camera_cube_dict = dict()
@@ -354,6 +361,8 @@ class LidarBoxFrame(CommonBaseMixIn):
 
         camera_cubes_dict = dict()
         camera_cubes_list = []
+        # 2d POINT类型
+        images_point_dict = dict()
 
         if self.config.cam_parse_mode == "manifest_parse":
             mfst_data = LidarManifestParse(self.base_url, config=LidarManifestConfig())
@@ -408,8 +417,9 @@ class LidarBoxFrame(CommonBaseMixIn):
                 "height": height,
 
             }
-            sg_img_dict = self.get_single_image_dict(img["items"], width=width, height=height, img_idx=idx)
+            sg_img_dict,sg_point_dict = self.get_single_image_dict(img["items"], width=width, height=height, img_idx=idx)
             images_dict[camera_name] = sg_img_dict
+            images_point_dict[camera_name] = sg_point_dict
             images_list.append(sg_img_dict)
 
             if img.get("cameraCubes"):
@@ -421,7 +431,7 @@ class LidarBoxFrame(CommonBaseMixIn):
         if len(camera_list) != len(images):
             raise Exception("找到的镜头数量和原始不一致")
 
-        return camera_list, camera_meta, images_dict, images_list, camera_cubes_dict, camera_cubes_list
+        return camera_list, camera_meta, images_dict, images_list, camera_cubes_dict, camera_cubes_list, images_point_dict
 
     def __repr__(self):
         return f'Frame {self.frameId}'
