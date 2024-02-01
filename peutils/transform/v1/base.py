@@ -261,10 +261,16 @@ class Lidar3dObj():
             # "labels": "" if self.lidar_attr else json.dumps(self.lidar_attr, ensure_ascii=False),
             "labels": json.dumps(self.lidar_attr, ensure_ascii=False) if self.lidar_attr else "",
         }
-        if self.pointCount:
+        if self.pointCount is None:
+            _data_dict["pointCount"] = {}
+        elif isinstance(self.pointCount, int):
             _data_dict["pointCount"] = {
                 "lidar": self.pointCount
             }
+        elif isinstance(self.pointCount, dict):
+            _data_dict["pointCount"] = self.pointCount
+        else:
+            raise ValueError(f'pointCount参数error')
         return _data_dict
 
 
