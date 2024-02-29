@@ -684,9 +684,26 @@ class LidarPointPolyline():
 class CommonBaseMixIn():
     session = get_session(3)
 
+    def parse_from_private_path(self, private_path):
+        private_path = private_path.replace("appen://", "")
+        route_list = private_path.split("/")
+        bucket_name = route_list[0]
+        private_real_path = '/'.join(route_list[1:])
+        assert private_real_path != '', 'real_path为空'
+        return bucket_name, private_real_path
+
     def get_raw_data(self, url):
-        rs = self.session.get(url).json()
-        return rs
+        if url.startswith(("http://", "https://")):
+            rs = self.session.get(url).json()
+            return rs
+        elif url.startswith("appen://"):
+            auth = oss2.Auth(os.getenv("MATRIXGO_RESULT_KEY"), os.getenv("MATRIXGO_RESULT_SECRET"))
+            bucket = oss2.Bucket(auth, "http://oss-cn-hangzhou.aliyuncs.com", "appen-platform")
+            _, private_real_path = self.parse_from_private_path(url)
+            rs = json.loads(bucket.get_object(private_real_path).read())
+            return rs
+        else:
+            raise Exception("请检查annotation数据路径")
 
     def get_raw_data_by_oss_api(self, url):
         url = unquote(url).split("?")[0]
