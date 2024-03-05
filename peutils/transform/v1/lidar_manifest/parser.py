@@ -38,7 +38,8 @@ class LidarManifestParse(CommonBaseMixIn):
         self.camera_list = self.get_camera_list()
 
     def get_frame_length(self):
-
+        if isinstance(self.raw_data["frames"], list):  # manifest frames是list的情况
+            return len(self.raw_data["frames"])
         if self.raw_data["frames"].get("urls") is not None:
             f_num = len(self.raw_data["frames"].get("urls"))
         elif self.raw_data["frames"].get("data") is not None:
@@ -48,6 +49,9 @@ class LidarManifestParse(CommonBaseMixIn):
         return f_num
 
     def get_camera_list(self):
+        if isinstance(self.raw_data["frames"], list):  # manifest frames是list的情况
+            camera_list = [camera['name'] for camera in self.raw_data["frames"][0]['cameras']]
+            return camera_list
         img_len = len(self.raw_data["images"])
         camera_list = [x["camera"] for x in self.raw_data["images"] ]
         # print(img_len,camera_list)
