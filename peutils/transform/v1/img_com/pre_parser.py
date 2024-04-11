@@ -85,7 +85,7 @@ class ImgComPre():
             self.cam_names = ["default"]
         else:
             assert isinstance(cam_names,list) is True,"cam_names必须是数组"
-            assert "default" not in self.cam_names,"传入的镜头不能有default"
+            assert "default" not in cam_names,"传入的镜头不能有default"
             self.cam_names = cam_names
 
     def add_instance_obj(self, p_category, p_attributes=None, ist_number=None, ist_id=None):
