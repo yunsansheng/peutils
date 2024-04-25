@@ -698,7 +698,10 @@ class CommonBaseMixIn():
             return rs
         elif url.startswith("appen://"):
             auth = oss2.Auth(os.getenv("MATRIXGO_RESULT_KEY"), os.getenv("MATRIXGO_RESULT_SECRET"))
-            bucket = oss2.Bucket(auth, "http://oss-cn-hangzhou.aliyuncs.com", "appen-platform")
+            if url.startswith("appen://appen-platform-dev"):
+                bucket = oss2.Bucket(auth, "http://oss-cn-zhangjiakou.aliyuncs.com", "appen-platform-dev")
+            else:
+                bucket = oss2.Bucket(auth, "http://oss-cn-hangzhou.aliyuncs.com", "appen-platform")
             _, private_real_path = self.parse_from_private_path(url)
             rs = json.loads(bucket.get_object(private_real_path).read())
             return rs
