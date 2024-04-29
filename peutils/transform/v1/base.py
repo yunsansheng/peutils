@@ -11,6 +11,8 @@ Change History:
 from urllib.parse import unquote
 
 import requests
+from oss2 import defaults, Session
+
 from peutils.ossutil import OSS_STS_API
 from requests.adapters import HTTPAdapter
 import inspect
@@ -48,6 +50,15 @@ def get_session(retry=3):
     session.mount('https://', HTTPAdapter(max_retries=retry))
 
     return session
+
+
+class OssSession(Session):
+    def __init__(self):
+        super().__init__()
+        psize = defaults.connection_pool_size
+        request_retries = defaults.request_retries
+        self.session.mount('http://', requests.adapters.HTTPAdapter(pool_connections=psize, pool_maxsize=psize, max_retries=request_retries))
+        self.session.mount('https://', requests.adapters.HTTPAdapter(pool_connections=psize, pool_maxsize=psize, max_retries=request_retries))
 
 
 # print(inspect.isbuiltin(int))
@@ -698,10 +709,11 @@ class CommonBaseMixIn():
             return rs
         elif url.startswith("appen://"):
             auth = oss2.Auth(os.getenv("MATRIXGO_RESULT_KEY"), os.getenv("MATRIXGO_RESULT_SECRET"))
+            oss_session = OssSession()
             if url.startswith("appen://appen-platform-dev"):
-                bucket = oss2.Bucket(auth, "http://oss-cn-zhangjiakou.aliyuncs.com", "appen-platform-dev")
+                bucket = oss2.Bucket(auth, "http://oss-cn-zhangjiakou.aliyuncs.com", "appen-platform-dev", session=oss_session)
             else:
-                bucket = oss2.Bucket(auth, "http://oss-cn-hangzhou.aliyuncs.com", "appen-platform")
+                bucket = oss2.Bucket(auth, "http://oss-cn-hangzhou.aliyuncs.com", "appen-platform", session=oss_session)
             _, private_real_path = self.parse_from_private_path(url)
             rs = json.loads(bucket.get_object(private_real_path).read())
             return rs
