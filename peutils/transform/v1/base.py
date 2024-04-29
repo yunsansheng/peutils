@@ -12,6 +12,7 @@ from urllib.parse import unquote
 
 import requests
 from oss2 import defaults, Session
+from urllib3 import Retry
 
 from peutils.ossutil import OSS_STS_API
 from requests.adapters import HTTPAdapter
@@ -56,9 +57,14 @@ class OssSession(Session):
     def __init__(self):
         super().__init__()
         psize = defaults.connection_pool_size
-        request_retries = defaults.request_retries
-        self.session.mount('http://', requests.adapters.HTTPAdapter(pool_connections=psize, pool_maxsize=psize, max_retries=request_retries))
-        self.session.mount('https://', requests.adapters.HTTPAdapter(pool_connections=psize, pool_maxsize=psize, max_retries=request_retries))
+        retries = Retry(total=defaults.request_retries,
+                        backoff_factor=0.5,
+                        status_forcelist=[500, 502, 503, 504],
+                        allowed_methods=["GET"])
+        self.session.mount('http://', requests.adapters.HTTPAdapter(pool_connections=psize, pool_maxsize=psize,
+                                                                    max_retries=retries))
+        self.session.mount('https://', requests.adapters.HTTPAdapter(pool_connections=psize, pool_maxsize=psize,
+                                                                     max_retries=retries))
 
 
 # print(inspect.isbuiltin(int))
@@ -390,7 +396,7 @@ class Lidar3dPolygonObj():
 
 class Lidar3dImageRect():
     def __init__(self, frameNum, id, number, type, category, position, dimension, imageNum=None,
-                 img_attr=None, points=None, rect1=None, rect2=None,middle=None):
+                 img_attr=None, points=None, rect1=None, rect2=None, middle=None):
         '''
         VANISH_CUBE 灭点立体框才有points
         RECT_CUBE: 前后矩形框组成的立体框 只有这个才有rect1,rect2
@@ -711,7 +717,8 @@ class CommonBaseMixIn():
             auth = oss2.Auth(os.getenv("MATRIXGO_RESULT_KEY"), os.getenv("MATRIXGO_RESULT_SECRET"))
             oss_session = OssSession()
             if url.startswith("appen://appen-platform-dev"):
-                bucket = oss2.Bucket(auth, "http://oss-cn-zhangjiakou.aliyuncs.com", "appen-platform-dev", session=oss_session)
+                bucket = oss2.Bucket(auth, "http://oss-cn-zhangjiakou.aliyuncs.com", "appen-platform-dev",
+                                     session=oss_session)
             else:
                 bucket = oss2.Bucket(auth, "http://oss-cn-hangzhou.aliyuncs.com", "appen-platform", session=oss_session)
             _, private_real_path = self.parse_from_private_path(url)
