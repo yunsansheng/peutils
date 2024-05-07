@@ -388,7 +388,7 @@ class LidarBoxFrame(CommonBaseMixIn):
                     elif self.config.cam_parse_mode == "kitti_manifest":
                         camera_name = camera_names[idx]
                     else:
-                        camera_name = unquote(image_path).split("/")[-2]
+                        camera_name = unquote(image_path).split("?Expires=")[0].split("/")[-2]
                 else:
                     image_path = None
                     camera_name = str(idx)

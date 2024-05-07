@@ -713,7 +713,7 @@ class CommonBaseMixIn():
         if url.startswith(("http://", "https://")):
             rs = self.session.get(url).json()
             return rs
-        elif url.startswith("appen://"):
+        elif url.startswith("appen://appen-platform"):
             auth = oss2.Auth(os.getenv("MATRIXGO_RESULT_KEY"), os.getenv("MATRIXGO_RESULT_SECRET"))
             oss_session = OssSession()
             if url.startswith("appen://appen-platform-dev"):
@@ -728,7 +728,7 @@ class CommonBaseMixIn():
             raise Exception("请检查annotation数据路径")
 
     def get_raw_data_by_oss_api(self, url):
-        url = unquote(url).split("?")[0]
+        url = unquote(url).split("?Expires=")[0]
         assert url.startswith("https://appen-data.oss-cn-shanghai.aliyuncs.com/"), "http bucket error"
         oss_key = url.replace("https://appen-data.oss-cn-shanghai.aliyuncs.com/", "")
         oss_api = OSS_STS_API(bucket_name="appen-data")

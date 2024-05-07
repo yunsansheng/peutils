@@ -24,7 +24,7 @@ class LidarManifestParse(CommonBaseMixIn):
     def __init__(self,base_url,config):
         # base_url = os.path.join(base_url, "manifest.json").replace('\\', '/')
         # 兼容私有化的http链接
-        if len(unquote(base_url).split("?")) == 1:
+        if len(unquote(base_url).split("?Expires=")) == 1:
             # 说明是非私有化的http链接
             base_url = base_url if base_url.endswith("manifest.json") else os.path.join(base_url, "manifest.json").replace('\\', '/')
             self.raw_data = self.get_raw_data(base_url)
