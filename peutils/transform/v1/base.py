@@ -471,7 +471,7 @@ categoryColor一般为空不要用，
 
 
 class ImgInstance():
-    def __init__(self, id, category, number, categoryName=None, ist_attr=None):
+    def __init__(self, id, category, number, categoryName=None, ist_attr=None, ist_dynamic_attr=None):
         # self.frameNum = frameNum  # frameNum用子物体的，因为一个实例会存在于连续真的多个数据中
         self.id = id
         self.category = category
@@ -479,6 +479,7 @@ class ImgInstance():
         self.number = number
         # self.categoryColor = categoryColor # 不用这个属性
         self.ist_attr = DotDict(ist_attr) if ist_attr else DotDict()
+        self.ist_dynamic_attr = DotDict(ist_dynamic_attr) if ist_dynamic_attr else DotDict()
         self.obj_list = []
 
     def __repr__(self):

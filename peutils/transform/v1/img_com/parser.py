@@ -150,13 +150,22 @@ class ImgComParse(CommonBaseMixIn):
         instance_dict = dict()
         all_obj_lst = []
         for instance in self.raw_data["instances"]:
+            dynamic_attr = dict()
+            if instance.get("dynamicAttributes"):
+                for da in instance["dynamicAttributes"]:
+                    if da["camera"] == self.config.camera:
+                        for frame in da["frames"]:
+                            if frame["attributes"]:
+                                dynamic_attr[frame["frameIndex"]] = frame["attributes"]
+
             ist = ImgInstance(
                 id=instance["id"],
                 category = instance["category"],
                 categoryName = instance["categoryName"],
                 # categoryColor = instance["categoryColor"],
                 number = instance["number"],
-                ist_attr = DotDict(instance.get("attributes")) if instance.get("attributes") else DotDict()
+                ist_attr = DotDict(instance.get("attributes")) if instance.get("attributes") else DotDict(),
+                ist_dynamic_attr = dynamic_attr
             )
             obj_list = []
             for ch in instance["children"]:
