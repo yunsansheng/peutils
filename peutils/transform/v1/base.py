@@ -728,12 +728,14 @@ class CommonBaseMixIn():
         else:
             raise Exception("请检查annotation数据路径")
 
-    def get_raw_data_by_oss_api(self, url):
+    def get_raw_data_by_oss_api(self, url,oss_client=None):
         url = unquote(url).split("?Expires=")[0]
         assert url.startswith("https://appen-data.oss-cn-shanghai.aliyuncs.com/"), "http bucket error"
         oss_key = url.replace("https://appen-data.oss-cn-shanghai.aliyuncs.com/", "")
-        oss_api = OSS_STS_API(bucket_name="appen-data")
-        rs = json.loads(oss_api.bucket.get_object(oss_key).read())
+        # oss_api = OSS_STS_API(bucket_name="appen-data")
+        if not oss_client:
+            oss_client=OSS_STS_API(bucket_name="appen-data")
+        rs = json.loads(oss_client.bucket.get_object(oss_key).read())
         return rs
 
     def get_oss_data(self, url):
