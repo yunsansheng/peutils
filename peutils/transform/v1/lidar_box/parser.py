@@ -24,7 +24,8 @@ class LidarBoxFrame(CommonBaseMixIn):
                  frame_attr, items, images,
                  config,
                  base_url,
-                 relations=None):
+                 relations=None,
+                 appen_data_oss_client=None):
         self.frameId = frameId
         self.frameUrl = frameUrl
         self.isValid = isValid
@@ -37,6 +38,8 @@ class LidarBoxFrame(CommonBaseMixIn):
         self.config = config
         if self.config.parse_id_col == "fid":
             self.config.seq_func = gen_uuid_seq(start=self.config.seq_start)
+
+        self.appen_data_oss_client=appen_data_oss_client
 
         self.frame_attr = frame_attr
         self.lidar_dict, self.polygon_dict, self.polyline_dict = self.get_lidar_dict(items)
@@ -365,7 +368,7 @@ class LidarBoxFrame(CommonBaseMixIn):
         images_point_dict = dict()
 
         if self.config.cam_parse_mode == "manifest_parse":
-            mfst_data = LidarManifestParse(self.base_url, config=LidarManifestConfig())
+            mfst_data = LidarManifestParse(self.base_url, config=LidarManifestConfig(),appen_data_oss_client=self.appen_data_oss_client)
         elif self.config.cam_parse_mode == "kitti_manifest":
             mfst_data_json = self.get_raw_data(self.base_url)
             # todo 这边先取首帧的cameras
@@ -446,6 +449,11 @@ class LidarBoxParse(CommonBaseMixIn):
         if self.config.parse_id_col == "gid":
             self.config.seq_func = gen_uuid_seq(start=self.config.seq_start)
 
+        if config.cam_parse_mode=='manifest_parse' and config.private_manifest:
+            self.appen_data_oss_client=OSS_STS_API(bucket_name='appen-data')
+        else:
+            self.appen_data_oss_client=None
+
         self.raw_data = self.get_raw_data(url)  # 获取JSON字典数据数据
         self.frames_lst, self.frame_length = self.parse_by_frame()
 
@@ -494,7 +502,8 @@ class LidarBoxParse(CommonBaseMixIn):
                     items=[],
                     images=[],
                     config=self.config,
-                    base_url=self.raw_data["baseUrl"]
+                    base_url=self.raw_data["baseUrl"],
+                    appen_data_oss_client=self.appen_data_oss_client
                 )
             else:
                 frame = LidarBoxFrame(
@@ -508,7 +517,8 @@ class LidarBoxParse(CommonBaseMixIn):
                     images=raw_frame["images"],
                     config=self.config,
                     relations=raw_frame['relations'],
-                    base_url=self.raw_data["baseUrl"]
+                    base_url=self.raw_data["baseUrl"],
+                    appen_data_oss_client=self.appen_data_oss_client
                 )
             frames_lst.append(frame)
 
@@ -518,7 +528,7 @@ class LidarBoxParse(CommonBaseMixIn):
 class LidarBoxDataConfig():
     def __init__(self, yaw_only=True, has_pointCount=True, number_adpter_func=None,
                  parse_id_col="id", seq_start=0, overflow=False, has_ignore_frame=False,
-                 cam_parse_mode="manifest_parse", filter_frame=None, key_frames=None
+                 cam_parse_mode="manifest_parse", filter_frame=None, key_frames=None,private_manifest=False
                  ):
         # has_ignore_frame 如果是True的时候，那么图片的宽高和和isvalid可以为空
         # filter_frame 默认None odd 奇数 even 偶数
@@ -535,6 +545,7 @@ class LidarBoxDataConfig():
         self.filter_frame = filter_frame
         self.key_frames = key_frames
         self.cam_parse_mode = cam_parse_mode
+        self.private_manifest=private_manifest
 
 
 from pprint import pprint

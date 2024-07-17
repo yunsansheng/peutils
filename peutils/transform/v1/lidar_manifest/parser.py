@@ -21,7 +21,7 @@ class LidarManifestConfig():
 class LidarManifestParse(CommonBaseMixIn):
 
     ### 继承session属性 用来读取url
-    def __init__(self,base_url,config):
+    def __init__(self,base_url,config,appen_data_oss_client=None):
         # base_url = os.path.join(base_url, "manifest.json").replace('\\', '/')
         # 兼容私有化的http链接
         if len(unquote(base_url).split("?Expires=")) == 1:
@@ -30,7 +30,7 @@ class LidarManifestParse(CommonBaseMixIn):
             self.raw_data = self.get_raw_data(base_url)
         else:
             # 说明是私有化的http链接
-            self.raw_data = self.get_raw_data_by_oss_api(base_url)
+            self.raw_data = self.get_raw_data_by_oss_api(base_url,oss_client=appen_data_oss_client)
 
         # self.raw_data = self.get_raw_data(base_url + "/manifest.json")
         self.config = config
