@@ -187,7 +187,8 @@ class ImgComParse(CommonBaseMixIn):
                                 # 测试None if ch["id"] =="faeb43ff-546b-4f80-b99b-8e4eeb62f112" else obj.get("order"),
                                 img_attr=obj.get("attributes", dict()),
                                 isOCR=obj.get("isOCR", False),
-                                OCRText=obj.get("OCRText", "")
+                                OCRText=obj.get("OCRText", ""),
+                                isRaw=obj.get("isRaw", None),
                             )
                             obj_list.append(imgobj)
 

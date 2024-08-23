@@ -577,7 +577,7 @@ class Img2Dobj():
                  frameNum, id, number, category,
                  shapeType, order=None, shape=None, img_attr=None,
                  displayName="", color="",
-                 isOCR=None, OCRText=None, cam_name="default", layer=0
+                 isOCR=None, OCRText=None, cam_name="default", layer=0, isRaw= None
                  ):
         self.instance = instance
         self.frameNum = frameNum
@@ -594,6 +594,8 @@ class Img2Dobj():
         self.OCRText = OCRText
         self.cam_name = cam_name
         self.layer = layer
+        if isRaw is not None:
+            self.isRaw = isRaw
 
     def get_bbox(self):
         # xmin ymin w h
