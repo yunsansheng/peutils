@@ -25,7 +25,8 @@ import numpy as np
 import warnings
 import lzf
 import uuid
-
+import numpy.typing as npt
+from typing import List,Union,Tuple
 
 
 HAS_SENSOR_MSGS = True
@@ -833,3 +834,80 @@ class PointCloud(object):
         md['points'] = len(pc_data)
         pc = PointCloud(md, pc_data)
         return pc
+
+    def __add__(self, other: 'PointCloud') -> 'PointCloud':
+        """
+        Concatenates two pcds
+
+        pc1=self.from_path(file1)
+        pc2=self.from_path(file2)
+
+        Concatenated_pcd=pc1+pc2
+
+        :param other:
+        :return:
+        """
+
+        if self.fields != other.fields:
+            raise ValueError(
+                "Can't concatenate point clouds with different fields. "
+                f"({self.fields} vs. {other.fields})"
+            )
+
+        if self.count != other.count:
+            raise ValueError(
+                "Can't concatenate point clouds with different count. "
+                f"({self.count} vs. {other.count})"
+            )
+
+        if self.type != other.type:
+            raise ValueError(
+                "Can't concatenate point clouds with different type. "
+                f"({self.type} vs. {other.type})"
+            )
+
+        if self.size != other.size:
+            raise ValueError(
+                "Can't concatenate point clouds with different size. "
+                f"({self.size} vs. {other.size})"
+            )
+
+        concatenated_pc = PointCloud.from_array(np.concatenate((self.pc_data, other.pc_data)))
+        return concatenated_pc
+
+    def __getitem__(
+            self, subscript: Union[slice, str, list[str], tuple[str, ...], npt.NDArray[np.bool_]]
+    ) -> 'PointCloud':
+
+        """
+        # >>> pc[3:8]
+
+
+        # >>> mask = (pc.pc_data["x"] > 0.5) & (pc.pc_data["y"] < 0.5)
+        # >>> pc[mask]
+
+
+        # >>> pc[("x", "y")]
+        """
+        if isinstance(subscript, slice):
+            points_list = self.pc_data[subscript]
+        elif isinstance(subscript, np.ndarray):
+            mask = subscript.squeeze()
+            if mask.ndim != 1:
+                raise ValueError(f"Mask array must be 1-dimensional but got {mask.ndim}")
+            points_list = self.pc_data[mask]
+        elif isinstance(subscript, str) or all(isinstance(s, str) for s in subscript):
+            if isinstance(subscript, str):
+                subscript = (subscript,)
+
+            if not np.isin(subscript, self.fields).all():
+                raise ValueError(f"Invalid field name(s): {subscript}")
+
+            types = np.dtype([(field,self.pc_data[field].dtype) for field in subscript])
+            points_list = np.empty(self.pc_data.shape, dtype=types)
+            for field in subscript:
+                points_list[field]=self.pc_data[field]
+
+        return PointCloud.from_array(points_list)
+
+
