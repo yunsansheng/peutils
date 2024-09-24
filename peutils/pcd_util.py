@@ -1,21 +1,22 @@
 # -*- coding: UTF-8 -*-
 
-'''
+"""
 Author: vincent yao
 Date: 2023/5/23
 Short Description:
 
 Change History:
 
-'''
+"""
 from io import BytesIO
-
+from typing import List
 import numpy as np
 import plyfile
 from peutils.transform.v1.base import get_session
-
+import open3d as o3d
 from peutils.pcd_py3 import point_cloud_from_path
 from pypcd import pypcd
+import numpy.typing as npt
 
 
 # common ply convert pcd tool
@@ -46,7 +47,9 @@ def ply2pcd(ply_file_path, compression="binary", mode="local"):
     metadata["viewpoint"] = [0, 0, 0, 1, 0, 0, 0]
     metadata["data"] = compression
 
-    points_data = np.array([plydata['vertex'][prop.name] for prop in plydata["vertex"].properties]).T
+    points_data = np.array(
+        [plydata["vertex"][prop.name] for prop in plydata["vertex"].properties]
+    ).T
     result_pc = pypcd.PointCloud(metadata, points_data)
     return result_pc
 
@@ -79,10 +82,45 @@ def convert_pcd(pcd_path: str, calibration: list):
     calibration_matrix = np.array(calibration).reshape(4, 4)
     pc = point_cloud_from_path(pcd_path)
     for p in pc.pc_data:
-        multi = np.dot(
-            calibration_matrix, np.array([p["x"], p["y"], p["z"], 1])
-        )
+        multi = np.dot(calibration_matrix, np.array([p["x"], p["y"], p["z"], 1]))
         p["x"] = multi[0]
         p["y"] = multi[1]
         p["z"] = multi[2]
     return pc
+
+
+def get_point_indices_within_box(
+    center_position,
+    dimension,
+    rotation_matrix,
+    point_cloud: o3d.geometry.PointCloud = None,
+    points:npt.NDArray=None,
+) -> List[int]:
+    """
+    计算3D框在点云中包含的点
+    入参point_cloud，points二选一,point_cloud优先级大于points
+    推荐使用point_cloud,减少计算量
+
+    :param center_position: 中心点[x,y,z]
+    :param dimension:  长宽高[l,w,h]
+    :param rotation_matrix: rotation 3x3 matrix
+    :param point_cloud: open3d PointCloud
+    :param points:numpy.array,[[x,y,z],...]
+    :return:
+    """
+    if not any([point_cloud, points.any()]):
+        raise Exception("缺少点云数据")
+
+    if point_cloud:
+        if not isinstance(point_cloud, o3d.geometry.PointCloud):
+            raise Exception("参数point_cloud类型需要为open3d.geometry.PointCloud")
+
+    if not point_cloud and points.any():
+        point_cloud = o3d.geometry.PointCloud()
+        point_cloud.points = o3d.utility.Vector3dVector(points)
+
+    obb = o3d.geometry.OrientedBoundingBox(
+        center=center_position, R=rotation_matrix, extent=dimension
+    )
+    indices = obb.get_point_indices_within_bounding_box(point_cloud.points)
+    return indices
