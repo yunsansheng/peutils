@@ -102,7 +102,7 @@ class ImgComPre():
         return ist
 
     def add_img_obj(self, instance, uuid, frameNum, c_category, shapeType, shape, c_attributes=None, isOCR=None,
-                    OCRText=None, cam_name="default",layer=0,isRaw=None):
+                    OCRText=None, cam_name="default",layer=0,isRaw=None, preAnnotationData=None):
         # child_seq = self.instance_seq.up_seq(c_category)
         ### 先判断uuid + c_category 当前有没有
 
@@ -135,7 +135,8 @@ class ImgComPre():
                 OCRText=OCRText,
                 cam_name=cam_name,
                 layer = layer,
-                isRaw = isRaw
+                isRaw = isRaw,
+                preAnnotationData=preAnnotationData
             )
         )
 

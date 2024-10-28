@@ -525,6 +525,8 @@ class ImgInstance():
                     pre_item["isOCR"] = item.isOCR
                 if item.OCRText is not None:
                     pre_item["OCRText"] = item.OCRText
+                if item.preAnnotationData is not None:
+                    pre_item["preAnnotationData"] = item.preAnnotationData
 
                 child_dict[child_id]["cameras"][0]["frames"].append(pre_item)
 
@@ -564,6 +566,8 @@ class ImgInstance():
                     pre_item["isOCR"] = item.isOCR
                 if item.OCRText is not None:
                     pre_item["OCRText"] = item.OCRText
+                if item.preAnnotationData is not None:
+                    pre_item["preAnnotationData"] = item.preAnnotationData
 
                 idx = [c["camera"] for c in child_dict[child_id]["cameras"]].index(item.cam_name)
                 child_dict[child_id]["cameras"][idx]["frames"].append(pre_item)
@@ -577,7 +581,7 @@ class Img2Dobj():
                  frameNum, id, number, category,
                  shapeType, order=None, shape=None, img_attr=None,
                  displayName="", color="",
-                 isOCR=None, OCRText=None, cam_name="default", layer=0, isRaw= None
+                 isOCR=None, OCRText=None, cam_name="default", layer=0, isRaw= None, preAnnotationData=None
                  ):
         self.instance = instance
         self.frameNum = frameNum
@@ -596,6 +600,7 @@ class Img2Dobj():
         self.layer = layer
         if isRaw is not None:
             self.isRaw = isRaw
+        self.preAnnotationData = preAnnotationData
 
     def get_bbox(self):
         # xmin ymin w h
