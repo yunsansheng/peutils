@@ -189,6 +189,7 @@ class ImgComParse(CommonBaseMixIn):
                                 isOCR=obj.get("isOCR", False),
                                 OCRText=obj.get("OCRText", ""),
                                 isRaw=obj.get("isRaw", None),
+                                preAnnotationData=obj.get("preAnnotationData", None),
                             )
                             obj_list.append(imgobj)
 
