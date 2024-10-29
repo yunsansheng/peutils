@@ -876,7 +876,7 @@ class PointCloud(object):
         return concatenated_pc
 
     def __getitem__(
-            self, subscript: Union[slice, str, list[str], tuple[str, ...], npt.NDArray[np.bool_]]
+            self, subscript: Union[slice, str, List[str], Tuple[str, ...], npt.NDArray[np.bool_]]
     ) -> 'PointCloud':
 
         """
