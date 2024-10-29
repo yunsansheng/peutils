@@ -106,6 +106,7 @@ class LidarBoxFrame(CommonBaseMixIn):
             dimension=dimension,
             quaternion=quaternion,
             lidar_attr=json.loads(item["labels"]) if item.get("labels") else dict(),
+            attributes=item.get("attributes"),
             pointCount=pointCount,
             type="cube"
         )
