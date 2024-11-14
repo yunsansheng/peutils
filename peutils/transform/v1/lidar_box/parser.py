@@ -197,12 +197,12 @@ class LidarBoxFrame(CommonBaseMixIn):
         1.图像是否超出边界外
 
         '''
-        if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE", "POLYGON_CAST" ,"POINT"}:
+        if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE", "POLYGON_CAST" ,"POINT", "POLYLINE_CAST"}:
             points = None
             rect1 = None
             rect2 = None
             middle = None
-            if item["type"] in { "VANISH_CUBE","POLYGON_CAST" }:
+            if item["type"] in { "VANISH_CUBE","POLYGON_CAST", "POLYLINE_CAST"}:
                 points = item["points"]
 
             if item["type"] == "RECT_CUBE":
@@ -327,7 +327,7 @@ class LidarBoxFrame(CommonBaseMixIn):
         single_image_dict = dict()
         single_image_point_dict = defaultdict(list)
         for item in items:
-            if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE","POLYGON_CAST"}:
+            if item["type"] in {"RECT", "VANISH_CUBE", "RECT_CUBE","POLYGON_CAST", "POLYLINE_CAST"}:
                 key, img_obj = self.parse_img_by_item(item, width, height, img_idx)
                 single_image_dict[key] = img_obj
             elif item["type"] == "POINT":
