@@ -358,13 +358,13 @@ def point_cloud_to_fileobj(pc, fileobj, data_compression=None):
         assert(data_compression in ('ascii', 'binary', 'binary_compressed'))
         metadata['data'] = data_compression
 
-    header = write_header(metadata)
+    header = write_header(metadata).encode('utf-8')
     fileobj.write(header)
     if metadata['data'].lower() == 'ascii':
         fmtstr = build_ascii_fmtstr(pc)
         np.savetxt(fileobj, pc.pc_data, fmt=fmtstr)
     elif metadata['data'].lower() == 'binary':
-        fileobj.write(pc.pc_data.tostring('C'))
+        fileobj.write(pc.pc_data.tobytes())
     elif metadata['data'].lower() == 'binary_compressed':
         # TODO
         # a '_' field is ignored by pcl and breakes compressed point clouds.
@@ -373,9 +373,9 @@ def point_cloud_to_fileobj(pc, fileobj, data_compression=None):
         # reorder to column-by-column
         uncompressed_lst = []
         for fieldname in pc.pc_data.dtype.names:
-            column = np.ascontiguousarray(pc.pc_data[fieldname]).tostring('C')
+            column = np.ascontiguousarray(pc.pc_data[fieldname]).tobytes()
             uncompressed_lst.append(column)
-        uncompressed = ''.join(uncompressed_lst)
+        uncompressed = b''.join(uncompressed_lst)
         uncompressed_size = len(uncompressed)
         # print("uncompressed_size = %r"%(uncompressed_size))
         buf = lzf.compress(uncompressed)
@@ -725,7 +725,7 @@ class PointCloud(object):
             warnings.warn('data_compression keyword is deprecated for'
                           ' compression')
             compression = kwargs['data_compression']
-        with open(fname, 'w') as f:
+        with open(fname, 'wb') as f:
             point_cloud_to_fileobj(self, f, compression)
 
     def save_pcd_to_fileobj(self, fileobj, compression=None, **kwargs):
