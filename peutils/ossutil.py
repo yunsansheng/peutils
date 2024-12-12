@@ -96,7 +96,7 @@ def get_long_object_link(auth_str,bucket_name,file_key,duration=604800):
 
 
 class OSS_STS_API():
-    def __init__(self,bucket_name, time_out=60,region=None):
+    def __init__(self,bucket_name, time_out=60,region=None,always_public=False):
         oss_path = f"oss://{bucket_name}/"
         self.auth_str = get_oss_auth_str(oss_path,auth_type="re_up",is_print=False)
         self.auth_dict = parse_info_from_token(self.auth_str)
@@ -112,6 +112,10 @@ class OSS_STS_API():
                 region = f"http://{self.short_region}.aliyuncs.com"
         else:
             region = region
+
+        # 针对小文件，或者确定是不同region的bucket,可以总是通过公网访问。
+        if always_public is True:
+            region = f"http://{self.short_region}.aliyuncs.com"
 
         self.region= region
         self.bucket = oss2.Bucket(self.auth, region, bucket_name,connect_timeout=time_out)
