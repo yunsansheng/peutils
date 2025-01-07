@@ -68,6 +68,56 @@ h = WooeyBaseZipFileiHander("test template with zip class",".csv",process_func=p
 
 '''
 
+class WooeyBaseA9HandlerFile():
+    '''
+    project_desc: str
+    need_process_suffix : str
+    process_func function
+    other_params a list like {"arganeme":{}} if name start with -- means option param
+    {
+        "arg1":{
+            "help:"arg help", #not empty
+            "type":int ,# not empty when it not choices.
+            "default":'', #option
+            "choices":['a','b','c'] #option
+
+        },
+        "--arg2":{}, option arg2
+        ...
+    }
+    ##
+    '''
+    def __init__(self,project_desc,need_process_suffix,process_func,other_params=None):
+        self.project_desc=project_desc
+        self.need_process_suffix = need_process_suffix
+        self.process_func = process_func
+        self.other_params = other_params
+
+    def main(self):
+        parser = ArgumentParser(description=self.project_desc)
+        parser.add_argument('data_url', help='Upload file by url',
+                            type=str)
+        if self.other_params:
+            for k,v in self.other_params.items():
+                parser.add_argument(k,**v)
+
+        args = parser.parse_args()
+        # filename = args.inputfile.name
+        # assert self.need_process_suffix.endswith(".zip")==False,"内容文件不能是zip格式"
+
+        # add other param
+        users_param = {}
+        if self.other_params:
+            for k,v in self.other_params.items():
+                # 移除非必须参数前面的-
+                users_param[k] = getattr(args,k.lstrip("-") )
+
+        self.process_func(filename, **users_param)
+        # if filename.endswith(self.need_process_suffix):
+        #     self.process_func(filename,**users_param)
+        # else:
+        #     raise Exception(f"file name suffix not endswith {self.need_process_suffix} or not zipfile")
+
 
 class WooeyBaseZipHandlerFile():
     '''
