@@ -102,7 +102,8 @@ class WooeyBaseA9HandlerFile():
                 parser.add_argument(k,**v)
 
         args = parser.parse_args()
-        # filename = args.inputfile.name
+        filename = args.inputfile.name
+        # filename = args.data_url
         # assert self.need_process_suffix.endswith(".zip")==False,"内容文件不能是zip格式"
 
         # add other param
