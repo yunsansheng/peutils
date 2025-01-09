@@ -87,24 +87,24 @@ class WooeyBaseA9HandlerFile():
     }
     ##
     '''
-    def __init__(self,project_desc,need_process_suffix,process_func,other_params=None):
+    def __init__(self,project_desc,need_process_suffix,process_func,other_params=None,chinese_filename_transcoding=False,chinese_filename_target_encoding_format='gbk'):
         self.project_desc=project_desc
         self.need_process_suffix = need_process_suffix
         self.process_func = process_func
         self.other_params = other_params
+        self.chinese_filename_transcoding=chinese_filename_transcoding
+        self.chinese_filename_target_encoding_format=chinese_filename_target_encoding_format
 
     def main(self):
         parser = ArgumentParser(description=self.project_desc)
-        parser.add_argument('data_url', help='Upload file by url',
-                            type=str)
+        parser.add_argument("data_url",help="data_url from a9_system",type=str)
+        parser.add_argument('-inputfile', help='可选文件参数，传了，默认忽略data_url',
+                            type=FileType('r'))
         if self.other_params:
             for k,v in self.other_params.items():
                 parser.add_argument(k,**v)
 
         args = parser.parse_args()
-        filename = args.inputfile.name
-        # filename = args.data_url
-        # assert self.need_process_suffix.endswith(".zip")==False,"内容文件不能是zip格式"
 
         # add other param
         users_param = {}
@@ -113,11 +113,57 @@ class WooeyBaseA9HandlerFile():
                 # 移除非必须参数前面的-
                 users_param[k] = getattr(args,k.lstrip("-") )
 
-        self.process_func(filename, **users_param)
-        # if filename.endswith(self.need_process_suffix):
-        #     self.process_func(filename,**users_param)
-        # else:
-        #     raise Exception(f"file name suffix not endswith {self.need_process_suffix} or not zipfile")
+        if not args.inputfile:
+            self.process_func(args.data_url, **users_param)
+
+        else:
+            print("传了文件，将忽略data_url输出")
+
+            filename = args.inputfile.name
+            assert self.need_process_suffix.endswith(".zip")==False,"内容文件不能是zip格式"
+
+            # add other param
+            users_param = {}
+            if self.other_params:
+                for k,v in self.other_params.items():
+                    # 移除非必须参数前面的-
+                    users_param[k] = getattr(args,k.lstrip("-") )
+
+
+            if filename.endswith(self.need_process_suffix):
+                self.process_func(filename,**users_param)
+
+            elif filename.endswith(".zip"):
+                print("ready to extract file")
+                dir_name = os.path.dirname(filename)
+                with zipfile.ZipFile(filename, 'r') as z:
+                    z.extractall(path=dir_name)
+                print("extract finish... ready to process")
+                # 解压完成后，读取文件
+                files = list_files_deep(dir_name, suffix=self.need_process_suffix)
+                print(f"发现待处理文件{len(files)}")
+
+                if self.chinese_filename_transcoding:
+                    for f in files:
+                        try:
+                            f_name=os.path.basename(f)
+                            f_dirname=os.path.dirname(f)
+                            f_path=Path(f)
+                            f_path.rename(os.path.join(f_dirname, f_name.encode('cp437').decode(self.chinese_filename_target_encoding_format)))
+                        except Exception as e:
+                            print('-' * 30)
+                            print(f'文件名<{os.path.basename(f)}>转码失败，跳过')
+                            print(e)
+                            print('-' * 30)
+                            continue
+                    files = list_files_deep(dir_name, suffix=self.need_process_suffix)
+
+
+                for file in files:
+                    print(f"process file {file}")
+                    self.process_func(file,**users_param)
+            else:
+                raise Exception(f"file name suffix not endswith {self.need_process_suffix} or not zipfile")
 
 
 class WooeyBaseZipHandlerFile():
