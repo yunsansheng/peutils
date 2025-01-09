@@ -26,7 +26,7 @@ import warnings
 import lzf
 import uuid
 import numpy.typing as npt
-from typing import List,Union,Tuple
+from typing import List,Union,Tuple,Optional,Sequence
 
 
 HAS_SENSOR_MSGS = True
@@ -834,6 +834,60 @@ class PointCloud(object):
         md['points'] = len(pc_data)
         pc = PointCloud(md, pc_data)
         return pc
+
+    def transform(self, transform_matrix: npt.NDArray) -> None:
+        xyz_pcd = self.numpy(('x', 'y', 'z'))
+        points_quantic = np.column_stack(
+            (xyz_pcd, np.ones(xyz_pcd.shape[0])))
+        transformed_points = np.dot(transform_matrix, points_quantic.T).T
+        self.pc_data['x'] = transformed_points[:, 0]
+        self.pc_data['y'] = transformed_points[:, 1]
+        self.pc_data['z'] = transformed_points[:, 2]
+
+    def numpy(self, fields: Optional[Sequence[str]] = None) -> npt.NDArray:
+        """Returns numpy array of the point cloud
+
+        Args:
+            fields (Optional[Sequence[str]], optional): Fields to return.
+                If None, all fields are returned. Defaults to None.
+
+        Returns:
+            npt.NDArray: Numpy array of the point cloud
+
+        # >>> pc.fields
+        ("x", "y", "z")
+
+        # >>> pc.numpy()
+        array([[0.0, 0.1, 0.2],
+               [0.3, 0.4, 0.5],
+               ...,
+               [0.9, 1.0, 1.1]])
+
+        # >>> pc.numpy(("x", "y"))
+        array([[0.0, 0.1],
+               [0.3, 0.4],
+               ...,
+               [0.9, 1.0]])
+
+        # >>> pc.numpy(("x", "y", "z"))
+        array([[0.0, 0.1, 0.2],
+               [0.3, 0.4, 0.5],
+               ...,
+               [0.9, 1.0, 1.1]])
+        """
+
+        if fields is None:
+            fields = self.fields
+
+        if len(fields) == 0:
+            return np.empty((0, 0))
+
+        if self.points == 0:
+            return np.empty((0, len(fields)))
+
+        _stack = tuple(self.pc_data[field] for field in fields)
+
+        return np.vstack(_stack).T
 
     def __add__(self, other: 'PointCloud') -> 'PointCloud':
         """

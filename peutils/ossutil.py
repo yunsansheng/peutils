@@ -16,6 +16,8 @@ import warnings
 import oss2
 from oss2.models import PartInfo
 from oss2 import determine_part_size
+from collections import deque
+from pathlib import Path
 
 import os
 
@@ -209,7 +211,6 @@ class OSS_STS_API():
                 print(f"!请注意:{oss_path}下已自动忽略文件: {ignore_list}")
             return path_list
 
-
     # meta_header {'Content-Type': 'image/jpg', "Content-Disposition": "inline", "Cache-Control": "no-cache"}
     # meta_header设置为空 {}
     def set_obj_meta(self,filename_list,meta_header):
@@ -243,7 +244,6 @@ class OSS_STS_API():
     #     og_url = prefix_url + oss_path
     #
     #     return url, og_url
-
 
     def copy_big_file(self, src_key, dest_key, src_bucket_name):
         """
@@ -314,3 +314,67 @@ class OSS_STS_API():
         assert dest_object_size == total_size
 
         return result.status
+
+    def find_shallowest_target(self, root, target_name,target_type):
+        """
+        查找根路径下路径最浅的目标
+        层序遍历
+
+        :param root: 根路径
+        :param target_name: 目标名称
+        :param target_type: 目标类型
+        :return:
+        """
+
+        if target_type not in ('folder','file'):
+            raise Exception("target_type只支持 folder or file")
+
+        if not root.endswith("/"):
+            root = f"{root}/"
+
+        queue = deque([root])
+        while queue:
+            current_prefix = queue.popleft()
+            for obj in oss2.ObjectIterator(self.bucket, prefix=current_prefix, delimiter='/'):
+                if obj.is_prefix():
+                    if target_type=='folder' and Path(obj.key).name == target_name:
+                        return obj.key
+                    queue.append(obj.key)
+                else:
+                    if target_type=='file' and Path(obj.key).name == target_name:
+                        return obj.key
+        return None
+
+    def find_deepest_target(self, root, target_name,target_type, current_depth=0):
+        """
+        慎用，效率很低
+        查找根路径下路径最深的目标
+        深度遍历
+
+        :param root: 根路径
+        :param target_name: 目标名称
+        :param target_type: 目标类型
+        :param current_depth: 当前深度
+        :return:
+        """
+        if target_type not in ('folder','file'):
+            raise Exception("target_type只支持 folder or file")
+
+        if not root.endswith("/"):
+            root = f"{root}/"
+
+        deepest_path = None
+        max_depth = current_depth
+
+        for obj in oss2.ObjectIterator(self.bucket, prefix=root, delimiter='/'):
+            if obj.is_prefix():
+                if target_type == 'folder' and Path(obj.key).name == target_name:
+                    deepest_path, max_depth = obj.key, current_depth
+                sub_path, sub_depth = self.find_deepest_target(obj.key,target_name,target_type, current_depth + 1)
+                if sub_path and sub_depth > max_depth:
+                    deepest_path, max_depth = sub_path, sub_depth
+            else:
+                if target_type == 'file' and Path(obj.key).name == target_name:
+                    deepest_path, max_depth = obj.key, current_depth
+
+        return deepest_path,max_depth
