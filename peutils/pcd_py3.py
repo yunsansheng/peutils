@@ -789,7 +789,7 @@ class PointCloud(object):
               'points': 0,
               'type': [],
               'data': 'binary_compressed'}
-        md['fields'] = pc_data.dtype.names
+        md['fields'] = list(pc_data.dtype.names)
         for field in md['fields']:
             type_, size_ =\
                 numpy_type_to_pcd_type[pc_data.dtype.fields[field][0]]
