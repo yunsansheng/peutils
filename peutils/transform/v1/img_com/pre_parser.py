@@ -101,7 +101,7 @@ class ImgComPre():
         self.instance_lst.append(ist)
         return ist
 
-    def add_img_obj(self, instance, uuid, frameNum, c_category, shapeType, shape, c_attributes=None, isOCR=None,
+    def add_img_obj(self, instance, uuid, frameNum, c_category, shapeType, shape, child_number=None, c_attributes=None, isOCR=None,
                     OCRText=None, cam_name="default",layer=0,isRaw=None, preAnnotationData=None):
         # child_seq = self.instance_seq.up_seq(c_category)
         ### 先判断uuid + c_category 当前有没有
@@ -110,15 +110,16 @@ class ImgComPre():
         frame_order = self.frameorder_seq.up_seq(str(frameNum))
         # print("frame_order",frame_order)
 
-        obj = None
-        for o in instance.obj_list:
-            if o.id == uuid:
-                obj = o
-        if obj is None:
-            # 识别到新的ID边用c_category 获取一个新的编号
-            child_number = self.imgobj_seq.up_seq(c_category)
-        else:
-            child_number = self.imgobj_seq.get_seq(c_category)
+        if child_number is None:
+            obj = None
+            for o in instance.obj_list:
+                if o.id == uuid:
+                    obj = o
+            if obj is None:
+                # 识别到新的ID边用c_category 获取一个新的编号
+                child_number = self.imgobj_seq.up_seq(c_category)
+            else:
+                child_number = self.imgobj_seq.get_seq(c_category)
 
         instance.obj_list.append(
             Img2Dobj(
