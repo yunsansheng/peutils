@@ -115,6 +115,9 @@ class ImgComParse(CommonBaseMixIn):
                 else:
                     imageWidth = frameImageWidth
                     imageHeight = frameImageHeight
+            elif self.config.parse_img_size == "none":
+                imageWidth=0
+                imageHeight=0
             else:
                 raise Exception(f"图像尺寸{self.config.parse_img_size} 解析模式error")
 
