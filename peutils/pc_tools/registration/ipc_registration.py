@@ -131,7 +131,7 @@ def pairwise_registration(
 
 
 def main(
-    pcds,
+    pcd_files,
     voxel_size=0.5,
     max_corr_dist_factor=1.5,
     outlier_nb_neighbors=20,
@@ -140,11 +140,11 @@ def main(
     retry_max_correspondence_distance_factor=1.5,
     retry_fitness_threshold_factor=0.8,
 ):
-    if not pcds:
+    if not pcd_files:
         print("错误: 未找到任何PCD文件。请检查文件夹路径和文件类型。")
         return []
 
-    print(f"找到 {len(pcds)} 个PCD文件。")
+    print(f"找到 {len(pcd_files)} 个PCD文件。")
 
     global_poses = []
     # 初始化第一帧的全局位姿为单位矩阵
@@ -270,7 +270,7 @@ def main(
 
 
 def registration(
-    pcds,
+    pcd_files,
     voxel_size,
     max_corr_dist_factor,
     outlier_nb_neighbors,
@@ -309,7 +309,7 @@ def registration(
     )
 
     poses = main(
-        pcds,
+        pcd_files,
         voxel_size=voxel_size,
         max_corr_dist_factor=max_corr_dist_factor,
         outlier_nb_neighbors=outlier_nb_neighbors,
@@ -345,7 +345,7 @@ def registration(
 # output_file = "pose.json"
 #
 # registration(
-#     pcds=pcd_files,
+#     pcd_files=pcd_files,
 #     voxel_size=voxel_size,
 #     max_corr_dist_factor=max_corr_dist_factor,
 #     outlier_nb_neighbors=outlier_nb_neighbors,
