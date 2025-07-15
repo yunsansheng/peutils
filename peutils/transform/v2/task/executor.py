@@ -46,7 +46,7 @@ class AbstractTask(ABC):
         """额外的内容检查 将内容输出到log """
 
     def check_row_func(self,check_mode="all"): #check分a9的
-        if self.log is None or isinstance(self.log,ErrorMsgLogV2) ==False:
+        if self.log is None:
             raise Exception("请定义log 并且使用ErrorMsgLog的实例")
         else:
             ### 将自带错误的解析方法放过去这个错误的方法
