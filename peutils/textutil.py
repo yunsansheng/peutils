@@ -69,9 +69,15 @@ def get_device_sn():
         result = subprocess.check_output(cmd, shell=True).decode('utf-8')
         serial_number = result.split(' ')[-1].strip('\n').strip('"')
     elif sys_kind == 'Windows':
-        cmd = 'wmic bios get serialnumber'
-        result = subprocess.check_output(cmd, shell=True).decode('utf-8')
-        serial_number = result.split('\n')[1].strip()
+        try:
+            # 在较新的Windows系统（如Windows 10 21H1+ 或 Windows 11）中，wmic工具已被弃用。
+            # 改用PowerShell命令替代
+            cmd = 'powershell -Command "Get-WmiObject Win32_BIOS | Select-Object -ExpandProperty SerialNumber"'
+            serial_number = subprocess.check_output(cmd, shell=True).decode('utf-8').strip()
+        except:
+            cmd = 'wmic bios get serialnumber'
+            result = subprocess.check_output(cmd, shell=True).decode('utf-8')
+            serial_number = result.split('\n')[1].strip()
     else:
         raise Exception(f"unknow system kind:{sys_kind}")
     return serial_number
