@@ -18,6 +18,7 @@ from oss2.models import PartInfo
 from oss2 import determine_part_size
 from collections import deque
 from pathlib import Path
+from urllib.parse import urlparse
 
 import os
 
@@ -98,11 +99,17 @@ def get_long_object_link(auth_str,bucket_name,file_key,duration=604800):
 
 
 class OSS_STS_API():
-    def __init__(self,bucket_name, time_out=60,region=None,always_public=False):
-        oss_path = f"oss://{bucket_name}/"
-        self.auth_str = get_oss_auth_str(oss_path,auth_type="re_up",is_print=False)
-        self.auth_dict = parse_info_from_token(self.auth_str)
-        self.bucket_name = bucket_name
+    def __init__(self,bucket_name=None, time_out=60,region=None,always_public=False,auth_str=None):
+        if auth_str:
+            self.auth_str=auth_str
+            self.auth_dict = parse_info_from_token(self.auth_str)
+            self.bucket_name=urlparse(self.auth_dict['osspath']).hostname
+        else:
+            self.bucket_name=bucket_name
+            oss_path = f"oss://{self.bucket_name}/"
+            self.auth_str = get_oss_auth_str(oss_path,auth_type="re_up",is_print=False)
+            self.auth_dict = parse_info_from_token(self.auth_str)
+
         self.auth = oss2.StsAuth(self.auth_dict["id"],self.auth_dict["secret"],self.auth_dict["stoken"])
         self.short_region = self.auth_dict['region'] # 比如 oss-cn-shanghai
 
@@ -120,7 +127,7 @@ class OSS_STS_API():
             region = f"http://{self.short_region}.aliyuncs.com"
 
         self.region= region
-        self.bucket = oss2.Bucket(self.auth, region, bucket_name,connect_timeout=time_out)
+        self.bucket = oss2.Bucket(self.auth, region, self.bucket_name,connect_timeout=time_out)
 
     def check_is_empty_oss_folder(self,oss_key):
         assert oss_key.endswith("/") is True, "oss_key必须以/结尾"
