@@ -363,6 +363,7 @@ class OSS_STS_API():
         深度遍历（DFS）
         
         注意：此方法效率较低，因为每个目录都会调用一次 OSS API
+        建议优先使用 find_shallowest_target
 
         :param root: 根路径
         :param target_name: 目标名称
@@ -402,14 +403,15 @@ class OSS_STS_API():
 
         return deepest_path, max_depth
 
-    def find_paths_with_files(self, oss_path, suffixes=None):
+    def find_paths_with_files(self, oss_path, suffixes=None, debug=False):
         """
         深度遍历OSS路径，找到包含匹配后缀文件的所有路径
         
         :param oss_path: 根路径，例如 'root' 或 'root/'
         :param suffixes: 文件后缀列表或单个后缀，例如 ['jpg', 'png'] 或 'jpg'
                         如果为None，则匹配所有文件
-        :return: 包含匹配文件的路径列表
+        :param debug: 是否打印调试信息
+        :return: 包含匹配文件的目录列表（只返回直接包含文件的目录）
         
         示例：
         目录结构：
@@ -438,11 +440,19 @@ class OSS_STS_API():
         else:
             suffix_list = [s if s.startswith(".") else f".{s}" for s in suffixes]
         
+        if debug:
+            print(f"搜索路径: {oss_path}")
+            print(f"目标后缀: {suffix_list}")
+        
         result_paths = set()
         root_path = Path(oss_path)
+        processed_count = 0
+        matched_count = 0
         
         # 遍历所有对象（深度遍历）
         for obj in oss2.ObjectIterator(self.bucket, prefix=oss_path):
+            processed_count += 1
+            
             # 跳过文件夹
             if obj.key.endswith("/"):
                 continue
@@ -454,17 +464,25 @@ class OSS_STS_API():
                 if obj_path.suffix not in suffix_list:
                     continue
             
-            # 找到匹配的文件，获取其所有父目录
+            matched_count += 1
+            
+            if debug and matched_count <= 10:  # 只打印前10个匹配的文件
+                print(f"匹配文件: {obj.key} (后缀: {obj_path.suffix})")
+            
+            # 只添加文件所在的直接目录
             file_parent = obj_path.parent
+            parent_str = str(file_parent)
+            if not parent_str.endswith("/"):
+                parent_str += "/"
             
-            # 添加文件所在目录及其所有父目录，直到根路径
-            current = file_parent
-            while current != root_path and str(current).startswith(str(root_path).rstrip("/")):
-                result_paths.add(str(current) + "/")
-                current = current.parent
+            result_paths.add(parent_str)
             
-            # 添加根路径
-            result_paths.add(oss_path)
+            if debug and matched_count <= 3:
+                print(f"  -> 添加目录: {parent_str}")
+        
+        if debug:
+            print(f"\n总计: 处理 {processed_count} 个对象, 匹配 {matched_count} 个文件")
+            print(f"找到 {len(result_paths)} 个目录")
         
         # 排序返回
         return sorted(list(result_paths))
