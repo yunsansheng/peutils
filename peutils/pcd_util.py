@@ -27,6 +27,7 @@ def ply2pcd(ply_file_path, compression="binary", mode="local"):
     elif mode == "http":
         session = get_session()
         r = session.get(ply_file_path)
+        r.raise_for_status()
         ply_data_bytes = BytesIO(r.content)
         plydata = plyfile.PlyData.read(ply_data_bytes)
     else:
@@ -81,11 +82,16 @@ def convert_pcd(pcd_path: str, calibration: list):
     #                0.0, 0.0, 0.0, 1.0]
     calibration_matrix = np.array(calibration).reshape(4, 4)
     pc = point_cloud_from_path(pcd_path)
-    for p in pc.pc_data:
-        multi = np.dot(calibration_matrix, np.array([p["x"], p["y"], p["z"], 1]))
-        p["x"] = multi[0]
-        p["y"] = multi[1]
-        p["z"] = multi[2]
+    
+    # 使用向量化操作提升性能
+    points = pc.pc_data
+    xyz = np.column_stack([points["x"], points["y"], points["z"], np.ones(len(points))])
+    transformed = (calibration_matrix @ xyz.T).T
+    
+    points["x"] = transformed[:, 0]
+    points["y"] = transformed[:, 1]
+    points["z"] = transformed[:, 2]
+    
     return pc
 
 
@@ -108,16 +114,14 @@ def get_point_indices_within_box(
     :param points:numpy.array,[[x,y,z],...]
     :return:
     """
-    if not any([point_cloud, points.any()]):
-        raise Exception("缺少点云数据")
-
-    if point_cloud:
+    if point_cloud is not None:
         if not isinstance(point_cloud, o3d.geometry.PointCloud):
             raise Exception("参数point_cloud类型需要为open3d.geometry.PointCloud")
-
-    if not point_cloud and points.any():
+    elif points is not None and len(points) > 0:
         point_cloud = o3d.geometry.PointCloud()
         point_cloud.points = o3d.utility.Vector3dVector(points)
+    else:
+        raise Exception("缺少点云数据")
 
     obb = o3d.geometry.OrientedBoundingBox(
         center=center_position, R=rotation_matrix, extent=dimension

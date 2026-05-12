@@ -136,3 +136,78 @@ class DrawMaskCls:
 
 
 
+class RLEUtils:
+    """
+    RLE (Run-Length Encoding) 编解码工具类
+    用于二值掩码的压缩和解压缩
+    """
+    
+    @staticmethod
+    def binary_mask_to_rle(binary_mask):
+        """
+        将二值掩码转换为 RLE 格式
+        
+        :param binary_mask: numpy数组，二值掩码 (0和1)
+        :return: dict, {"counts": [...], "size": [height, width]}
+        """
+        rle = {"counts": [], "size": list(binary_mask.shape)}
+        counts = rle.get("counts")
+        for i, (value, elements) in enumerate(groupby(binary_mask.ravel(order="F"))):
+            if i == 0 and value == 1:
+                counts.append(0)
+            counts.append(len(list(elements)))
+        return rle
+    
+    @staticmethod
+    def rle_decode(rle, img_height, img_width):
+        """
+        将 RLE 格式解码为二值掩码
+        
+        :param rle: dict, {"counts": [...], "size": [height, width]}
+        :param img_height: 图像高度
+        :param img_width: 图像宽度
+        :return: numpy数组，二值掩码 (0和1)
+        """
+        counts = rle["counts"]
+        flat = []
+        val = 0
+        for c in counts:
+            flat.extend([val] * c)
+            val = 1 - val
+        mask = np.array(flat[: img_height * img_width], dtype=np.uint8).reshape(
+            (img_height, img_width), order="F"
+        )
+        return mask
+    
+    @staticmethod
+    def rle_encode(mask):
+        """
+        将二值掩码编码为 RLE 格式（便捷方法）
+        
+        :param mask: numpy数组，二值掩码 (0和1)
+        :return: dict, {"counts": [...], "size": [height, width]}
+        """
+        fortran_ground_truth_binary_mask = np.asfortranarray(mask)
+        rle = RLEUtils.binary_mask_to_rle(fortran_ground_truth_binary_mask)
+        return rle
+    
+    @staticmethod
+    def decode(rle):
+        """
+        从 RLE 解码（自动从 size 获取尺寸）
+        
+        :param rle: dict, {"counts": [...], "size": [height, width]}
+        :return: numpy数组，二值掩码 (0和1)
+        """
+        img_height, img_width = rle["size"]
+        return RLEUtils.rle_decode(rle, img_height, img_width)
+    
+    @staticmethod
+    def encode(mask):
+        """
+        编码为 RLE（便捷方法，同 rle_encode）
+        
+        :param mask: numpy数组，二值掩码 (0和1)
+        :return: dict, {"counts": [...], "size": [height, width]}
+        """
+        return RLEUtils.rle_encode(mask)
