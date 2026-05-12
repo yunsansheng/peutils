@@ -19,14 +19,13 @@ from oss2 import determine_part_size
 from collections import deque
 from pathlib import Path
 from urllib.parse import urlparse
-
 import os
+import time
+from typing import Dict, Optional
 
 
 
 sys_kind = platform.system()
-
-
 
 
 # 权限re_up或者read
@@ -322,18 +321,17 @@ class OSS_STS_API():
 
         return result.status
 
-    def find_shallowest_target(self, root, target_name,target_type):
+    def find_shallowest_target(self, root, target_name, target_type):
         """
         查找根路径下路径最浅的目标
-        层序遍历
+        层序遍历（BFS）
 
         :param root: 根路径
         :param target_name: 目标名称
-        :param target_type: 目标类型
-        :return:
+        :param target_type: 目标类型 ('folder' 或 'file')
+        :return: 找到的目标路径，未找到返回 None
         """
-
-        if target_type not in ('folder','file'):
+        if target_type not in ('folder', 'file'):
             raise Exception("target_type只支持 folder or file")
 
         if not root.endswith("/"):
@@ -343,28 +341,36 @@ class OSS_STS_API():
         while queue:
             current_prefix = queue.popleft()
             for obj in oss2.ObjectIterator(self.bucket, prefix=current_prefix, delimiter='/'):
+                # 跳过根路径本身
+                if obj.key == current_prefix:
+                    continue
+                    
                 if obj.is_prefix():
-                    if target_type=='folder' and Path(obj.key).name == target_name:
+                    # 这是一个文件夹
+                    if target_type == 'folder' and Path(obj.key).name == target_name:
                         return obj.key
+                    # 加入队列继续搜索
                     queue.append(obj.key)
                 else:
-                    if target_type=='file' and Path(obj.key).name == target_name:
+                    # 这是一个文件
+                    if target_type == 'file' and Path(obj.key).name == target_name:
                         return obj.key
         return None
 
-    def find_deepest_target(self, root, target_name,target_type, current_depth=0):
+    def find_deepest_target(self, root, target_name, target_type, current_depth=0):
         """
-        慎用，效率很低
         查找根路径下路径最深的目标
-        深度遍历
+        深度遍历（DFS）
+        
+        注意：此方法效率较低，因为每个目录都会调用一次 OSS API
 
         :param root: 根路径
         :param target_name: 目标名称
-        :param target_type: 目标类型
-        :param current_depth: 当前深度
-        :return:
+        :param target_type: 目标类型 ('folder' 或 'file')
+        :param current_depth: 当前深度（内部使用）
+        :return: (目标路径, 深度)，未找到返回 (None, 0)
         """
-        if target_type not in ('folder','file'):
+        if target_type not in ('folder', 'file'):
             raise Exception("target_type只支持 folder or file")
 
         if not root.endswith("/"):
@@ -374,14 +380,193 @@ class OSS_STS_API():
         max_depth = current_depth
 
         for obj in oss2.ObjectIterator(self.bucket, prefix=root, delimiter='/'):
+            # 跳过根路径本身
+            if obj.key == root:
+                continue
+                
             if obj.is_prefix():
+                # 这是一个文件夹
                 if target_type == 'folder' and Path(obj.key).name == target_name:
                     deepest_path, max_depth = obj.key, current_depth
-                sub_path, sub_depth = self.find_deepest_target(obj.key,target_name,target_type, current_depth + 1)
+                    
+                # 递归搜索子目录
+                sub_path, sub_depth = self.find_deepest_target(
+                    obj.key, target_name, target_type, current_depth + 1
+                )
                 if sub_path and sub_depth > max_depth:
                     deepest_path, max_depth = sub_path, sub_depth
             else:
+                # 这是一个文件
                 if target_type == 'file' and Path(obj.key).name == target_name:
                     deepest_path, max_depth = obj.key, current_depth
 
-        return deepest_path,max_depth
+        return deepest_path, max_depth
+
+    def find_paths_with_files(self, oss_path, suffixes=None):
+        """
+        深度遍历OSS路径，找到包含匹配后缀文件的所有路径
+        
+        :param oss_path: 根路径，例如 'root' 或 'root/'
+        :param suffixes: 文件后缀列表或单个后缀，例如 ['jpg', 'png'] 或 'jpg'
+                        如果为None，则匹配所有文件
+        :return: 包含匹配文件的路径列表
+        
+        示例：
+        目录结构：
+        - root/
+            - folder1/
+                - 1.jpg
+                - 2.jpg
+                - sub/
+                    - 1.jpg
+            - folder2/
+                - 1.jpg
+            - 1.png
+        
+        find_paths_with_files('root', suffixes=['jpg', 'png'])
+        返回: ['root/', 'root/folder1/', 'root/folder1/sub/', 'root/folder2/']
+        """
+        # 标准化路径
+        if not oss_path.endswith("/"):
+            oss_path = oss_path + "/"
+        
+        # 标准化后缀
+        if suffixes is None:
+            suffix_list = None
+        elif isinstance(suffixes, str):
+            suffix_list = [suffixes if suffixes.startswith(".") else f".{suffixes}"]
+        else:
+            suffix_list = [s if s.startswith(".") else f".{s}" for s in suffixes]
+        
+        result_paths = set()
+        root_path = Path(oss_path)
+        
+        # 遍历所有对象（深度遍历）
+        for obj in oss2.ObjectIterator(self.bucket, prefix=oss_path):
+            # 跳过文件夹
+            if obj.key.endswith("/"):
+                continue
+            
+            obj_path = Path(obj.key)
+            
+            # 检查文件后缀是否匹配
+            if suffix_list is not None:
+                if obj_path.suffix not in suffix_list:
+                    continue
+            
+            # 找到匹配的文件，获取其所有父目录
+            file_parent = obj_path.parent
+            
+            # 添加文件所在目录及其所有父目录，直到根路径
+            current = file_parent
+            while current != root_path and str(current).startswith(str(root_path).rstrip("/")):
+                result_paths.add(str(current) + "/")
+                current = current.parent
+            
+            # 添加根路径
+            result_paths.add(oss_path)
+        
+        # 排序返回
+        return sorted(list(result_paths))
+
+
+class OSSClientProxy:
+    """
+    OSS client 代理类
+    功能：
+    1. 包装OSS_STS_API实例，在每次调用方法前检查凭证是否过期
+    2. 如果凭证超过11小时，自动刷新整个客户端实例
+    """
+    
+    # 刷新client的阈值，auth_str的过期时间为12小时，这里设置为11小时
+    _ttl_seconds: int = 11*60*60
+    
+    def __init__(
+        self, 
+        client: 'OSS_STS_API', 
+        created_time: float,
+        bucket_name: str,
+        time_out: int = 60,
+        region: Optional[str] = None,
+        always_public: bool = False,
+        auth_str: Optional[str] = None
+    ):
+        self._client = client
+        self._created_time = created_time
+        # 保存创建参数，用于刷新时重新创建
+        self._init_params = {
+            'bucket_name': bucket_name,
+            'time_out': time_out,
+            'region': region,
+            'always_public': always_public,
+            'auth_str': auth_str
+        }
+        # 如果使用外部auth_str，不支持自动刷新
+        self._auto_refresh = auth_str is None
+    
+    def _check_and_refresh(self):
+        """检查凭证是否即将过期，如果是则刷新"""
+        # 如果使用外部auth_str，不自动刷新
+        if not self._auto_refresh:
+            return
+        
+        elapsed = time.time() - self._created_time
+        if elapsed >= self._ttl_seconds:
+            new_client = OSS_STS_API(
+                bucket_name=self._init_params['bucket_name'],
+                time_out=self._init_params['time_out'],
+                region=self._init_params['region'],
+                always_public=self._init_params['always_public'],
+                auth_str=self._init_params['auth_str']
+            )
+            self._client = new_client
+            self._created_time = time.time()
+    
+    def __getattr__(self, name):
+        """代理所有方法调用，调用前检查凭证"""
+        # 触发刷新检查
+        self._check_and_refresh()
+        
+        # 直接返回属性或方法
+        return getattr(self._client, name)
+
+
+class OSSClientFactory:
+    """
+    OSS Client工厂类
+    功能：
+    1. 创建带自动刷新功能的OSS客户端代理
+    """
+    
+    @staticmethod
+    def create_client(
+        bucket_name: str,
+        time_out: int = 60,
+        region: Optional[str] = None,
+        always_public: bool = False,
+        auth_str: Optional[str] = None
+    ) -> OSSClientProxy:
+        """
+        创建OSS客户端代理实例
+        """
+        # 创建真实的OSS_STS_API实例
+        client = OSS_STS_API(
+            bucket_name=bucket_name,
+            time_out=time_out,
+            region=region,
+            always_public=always_public,
+            auth_str=auth_str
+        )
+        
+        # 包装为代理对象（自动管理凭证刷新）
+        proxy = OSSClientProxy(
+            client=client,
+            created_time=time.time(),
+            bucket_name=bucket_name,
+            time_out=time_out,
+            region=region,
+            always_public=always_public,
+            auth_str=auth_str
+        )
+        
+        return proxy
